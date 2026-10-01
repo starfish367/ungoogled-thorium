@@ -42,8 +42,12 @@ def main():
     if sys.platform == 'win32':
         env['PATH'] = f"C:\\Program Files\\Git\\usr\\bin{sep}{env['PATH']}"
 
-    env['DEPOT_TOOLS_UPDATE'] = '0'
+    env['DEPOT_TOOLS_UPDATE'] = '1'
     env['DEPOT_TOOLS_WIN_TOOLCHAIN'] = '0'
+
+    # Ensure depot tools is updated so fetch works
+    update_cmd = 'update_depot_tools.bat' if sys.platform == 'win32' else 'update_depot_tools'
+    run_cmd([update_cmd], cwd=depot_tools_dir, env=env, shell=True)
 
     # Download Thorium source
     thorium_dir = os.path.join(root_dir, 'Thorium')
