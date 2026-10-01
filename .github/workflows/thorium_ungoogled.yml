@@ -1,0 +1,73 @@
+name: Build Thorium + Ungoogled
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'build_thorium_ungoogled.py'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Configure Developer Command Prompt
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install sccache
+        uses: mozilla-actions/sccache-action@v0.0.4
+
+      # Free Disk Space is omitted on Windows as there is no reliable action for it
+      # In reality, GH Actions Windows runners don't have enough space for Chromium.
+      # We rely on sccache and multiple runs if necessary, or the user providing a self-hosted runner.
+
+      - name: Run Build Script
+        run: python build_thorium_ungoogled.py --target-os win --target-cpu x64 --src-dir src
+        env:
+          SCCACHE_GHA_ENABLED: "true"
+          DEPOT_TOOLS_WIN_TOOLCHAIN: "0"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Thorium-Ungoogled-Win-x64
+          path: src/src/out/Thorium_x64/mini_installer.exe
+
+  build-linux-arm64:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Maximize Build Space
+        uses: easimon/maximize-build-space@master
+        with:
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+
+      - name: Install sccache
+        uses: mozilla-actions/sccache-action@v0.0.4
+
+      - name: Run Build Script
+        run: python build_thorium_ungoogled.py --target-os linux --target-cpu arm64 --src-dir src
+        env:
+          SCCACHE_GHA_ENABLED: "true"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Thorium-Ungoogled-Linux-arm64
+          path: src/src/out/Thorium_arm64/*.AppImage
