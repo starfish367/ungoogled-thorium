@@ -72,7 +72,10 @@ def main():
 
     # Ensure gclient sync runs for this version
     gclient_cmd = 'gclient.bat' if sys.platform == 'win32' else 'gclient'
-    run_cmd([gclient_cmd, 'sync', '-D', '--with_branch_heads', '--with_tags'], cwd=os.path.dirname(src_dir), env=env)
+    if chromium_version:
+        run_cmd([gclient_cmd, 'sync', '-D', '--with_branch_heads', '--with_tags', '--revision', chromium_version], cwd=os.path.dirname(src_dir), env=env)
+    else:
+        run_cmd([gclient_cmd, 'sync', '-D', '--with_branch_heads', '--with_tags'], cwd=os.path.dirname(src_dir), env=env)
     run_cmd([gclient_cmd, 'runhooks'], cwd=os.path.dirname(src_dir), env=env)
 
     # For Linux arm64 cross compile we need sysroots
