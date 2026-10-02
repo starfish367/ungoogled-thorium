@@ -16,6 +16,8 @@ on:
     paths:
       - 'build_thorium_ungoogled.py'
       - '.github/workflows/thorium_ungoogled.yml'
+      - 'utils/**'
+      - 'flags.gn'
 
 jobs:
   build-linux-arm64:

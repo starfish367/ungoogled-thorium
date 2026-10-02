@@ -259,9 +259,10 @@ def main():
                         action='store_true',
                         help=('Skip pruning the contingent paths. '
                               'Useful when building with the Google tooling is desired.'))
-    parser.add_argument('--ignore-missing',
-                        action='store_true',
-                        help=('Ignore files in pruning list that are already missing in the checkout.'))
+    parser.add_argument(
+        '--ignore-missing',
+        action='store_true',
+        help=('Ignore files in pruning list that are already missing in the checkout.'))
     parser.add_argument('--sysroot',
                         choices=('amd64', 'i386'),
                         help=('Skip pruning the sysroot for the specified architecture. '

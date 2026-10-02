@@ -16,7 +16,9 @@ def run_cmd(cmd, cwd=None, env=None, check=True, shell=False):
     else:
         print(f"Running: {cmd}")
         shell = True
+    sys.stdout.flush()
     subprocess.run(cmd, cwd=cwd, env=env, check=check, shell=shell)
+    sys.stdout.flush()
 
 def get_chromium_version(root_dir):
     version_file = os.path.join(root_dir, 'chromium_version.txt')
