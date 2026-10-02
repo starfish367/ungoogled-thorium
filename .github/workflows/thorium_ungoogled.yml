@@ -26,10 +26,13 @@ jobs:
         uses: easimon/maximize-build-space@master
         with:
           root-reserve-mb: 512
+          temp-reserve-mb: 64
           swap-size-mb: 1024
           remove-dotnet: 'true'
           remove-android: 'true'
           remove-haskell: 'true'
+          remove-codeql: 'true'
+          remove-docker-images: 'true'
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -60,6 +63,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Free Disk Space (Windows)
+        shell: pwsh
+        run: |
+          Get-PSDrive
+          if (Test-Path "C:\hostedtoolcache\windows") {
+            Get-ChildItem "C:\hostedtoolcache\windows" | Where-Object { $_.Name -notin @("Python", "sccache") } | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+          }
+          Get-PSDrive
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -72,7 +84,7 @@ jobs:
         uses: mozilla-actions/sccache-action@v0.0.4
 
       - name: Run Build Script
-        run: python build_thorium_ungoogled.py --target-os win --target-cpu x64 --src-dir src
+        run: python build_thorium_ungoogled.py --target-os win --target-cpu x64 --src-dir C:\src
         env:
           SCCACHE_GHA_ENABLED: "true"
           DEPOT_TOOLS_WIN_TOOLCHAIN: "0"
@@ -81,4 +93,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Thorium-Ungoogled-Win-x64
-          path: src/src/out/Thorium_x64/mini_installer.exe
+          path: C:\src\src\out\Thorium_x64\mini_installer.exe

@@ -4,6 +4,7 @@ import subprocess
 import sys
 import shutil
 import glob
+import time
 
 def run_cmd(cmd, cwd=None, env=None, check=True, shell=False):
     print(f"Running: {' '.join(cmd) if isinstance(cmd, list) else cmd}")
@@ -47,6 +48,13 @@ def main():
     env['DEPOT_TOOLS_UPDATE'] = '1'
     env['DEPOT_TOOLS_WIN_TOOLCHAIN'] = '0'
 
+    # Configure git for large repositories to prevent schannel/RPC drops
+    run_cmd(['git', 'config', '--global', 'http.postBuffer', '1048576000'])
+    run_cmd(['git', 'config', '--global', 'http.lowSpeedLimit', '0'])
+    run_cmd(['git', 'config', '--global', 'http.lowSpeedTime', '999999'])
+    if sys.platform == 'win32':
+        run_cmd(['git', 'config', '--global', 'http.sslBackend', 'openssl'])
+
     # Ensure depot tools is updated so fetch works
     update_cmd = 'update_depot_tools.bat' if sys.platform == 'win32' else 'update_depot_tools'
     run_cmd([update_cmd], cwd=depot_tools_dir, env=env, shell=True)
@@ -64,20 +72,42 @@ def main():
         os.makedirs(src_dir, exist_ok=True)
         # Fetch matching tag instead of latest trunk
         if chromium_version:
-            run_cmd(f"cd {src_dir} && fetch --nohooks --no-history chromium && cd src && git fetch --tags && git checkout {chromium_version}", shell=True, env=env)
+            fetch_cmd = f"cd {src_dir} && fetch --nohooks --no-history chromium && cd src && git fetch --depth=1 origin tag {chromium_version} && git checkout {chromium_version}"
         else:
             print("Warning: chromium_version.txt not found. Fetching latest trunk...")
-            run_cmd(f"cd {src_dir} && fetch --nohooks --no-history chromium", shell=True, env=env)
+            fetch_cmd = f"cd {src_dir} && fetch --nohooks --no-history chromium"
+
+        for attempt in range(1, 4):
+            try:
+                print(f"Fetching Chromium (attempt {attempt}/3)...")
+                run_cmd(fetch_cmd, shell=True, env=env)
+                break
+            except Exception as e:
+                print(f"Fetch attempt {attempt} failed: {e}")
+                if attempt == 3:
+                    raise
+                # Clean up any partial gclient metadata before retrying
+                for item in ['.gclient', '.gclient_entries', 'src']:
+                    p = os.path.join(src_dir, item)
+                    if os.path.exists(p):
+                        try:
+                            if os.path.isdir(p):
+                                shutil.rmtree(p, ignore_errors=True)
+                            else:
+                                os.remove(p)
+                        except Exception:
+                            pass
+                time.sleep(10)
 
     # Use the actual chromium src dir for the rest of the script
     src_dir = actual_src_dir
 
-    # Ensure gclient sync runs for this version
+    # Ensure gclient sync runs for this version with minimal disk footprint
     gclient_cmd = 'gclient.bat' if sys.platform == 'win32' else 'gclient'
     if chromium_version:
-        run_cmd([gclient_cmd, 'sync', '-D', '--with_branch_heads', '--with_tags', '--revision', chromium_version], cwd=os.path.dirname(src_dir), env=env)
+        run_cmd([gclient_cmd, 'sync', '-D', '--no-history', '--shallow', '--revision', f'src@{chromium_version}'], cwd=os.path.dirname(src_dir), env=env)
     else:
-        run_cmd([gclient_cmd, 'sync', '-D', '--with_branch_heads', '--with_tags'], cwd=os.path.dirname(src_dir), env=env)
+        run_cmd([gclient_cmd, 'sync', '-D', '--no-history', '--shallow'], cwd=os.path.dirname(src_dir), env=env)
     run_cmd([gclient_cmd, 'runhooks'], cwd=os.path.dirname(src_dir), env=env)
 
     # For Linux arm64 cross compile we need sysroots
@@ -149,6 +179,12 @@ def main():
     print("Running gn gen...")
     gn_cmd = 'gn.bat' if sys.platform == 'win32' else 'gn'
     run_cmd([gn_cmd, 'gen', out_dir], cwd=src_dir, env=env)
+
+    # Free up 15-20 GB of disk space before ninja compilation by removing the .git directory
+    print("Cleaning up .git to maximize compilation disk space...")
+    git_dir = os.path.join(src_dir, '.git')
+    if os.path.exists(git_dir):
+        shutil.rmtree(git_dir, ignore_errors=True)
 
     print("Running ninja...")
     target = 'chrome'
