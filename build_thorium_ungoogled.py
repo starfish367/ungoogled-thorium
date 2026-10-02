@@ -130,11 +130,30 @@ def main():
 
     # Ensure gclient sync runs for this version with minimal disk footprint
     gclient_cmd = 'gclient.bat' if sys.platform == 'win32' else 'gclient'
-    if chromium_version:
-        run_cmd([gclient_cmd, 'sync', '-D', '--no-history', '--shallow', '--revision', f'src@{chromium_version}'], cwd=os.path.dirname(src_dir), env=env)
-    else:
-        run_cmd([gclient_cmd, 'sync', '-D', '--no-history', '--shallow'], cwd=os.path.dirname(src_dir), env=env)
-    run_cmd([gclient_cmd, 'runhooks'], cwd=os.path.dirname(src_dir), env=env)
+    for attempt in range(1, 4):
+        try:
+            print(f"Running gclient sync (attempt {attempt}/3)...")
+            if chromium_version:
+                run_cmd([gclient_cmd, 'sync', '-D', '--no-history', '--shallow', '--revision', f'src@{chromium_version}'], cwd=os.path.dirname(src_dir), env=env)
+            else:
+                run_cmd([gclient_cmd, 'sync', '-D', '--no-history', '--shallow'], cwd=os.path.dirname(src_dir), env=env)
+            break
+        except Exception as e:
+            if attempt == 3:
+                raise
+            print(f"gclient sync attempt {attempt} failed ({e}), waiting 30s before retrying...")
+            time.sleep(30)
+
+    for attempt in range(1, 4):
+        try:
+            print(f"Running gclient runhooks (attempt {attempt}/3)...")
+            run_cmd([gclient_cmd, 'runhooks'], cwd=os.path.dirname(src_dir), env=env)
+            break
+        except Exception as e:
+            if attempt == 3:
+                raise
+            print(f"gclient runhooks attempt {attempt} failed ({e}), waiting 30s before retrying...")
+            time.sleep(30)
 
     # For Linux arm64 cross compile we need sysroots
     if target_os == 'linux' and target_cpu == 'arm64':
