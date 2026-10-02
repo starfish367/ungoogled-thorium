@@ -183,7 +183,7 @@ def main():
     print("Applying Thorium overlay and patches...")
     # Preserve Chromium's original root build configs and scripts so declarations and toolchains aren't broken
     preserved_files = {}
-    for rel_path in ['BUILD.gn', 'build/vs_toolchain.py', 'build/config/BUILDCONFIG.gn', 'build/config/arm.gni']:
+    for rel_path in ['BUILD.gn', 'build/vs_toolchain.py', 'build/config/BUILDCONFIG.gn', 'build/config/arm.gni', 'content/test/BUILD.gn']:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
             with open(full_path, 'r', encoding='utf-8') as f:
@@ -208,6 +208,22 @@ def main():
         with open(full_path, 'w', encoding='utf-8') as f:
             f.write(content)
 
+    # Ensure build/config/chromeos/ui_mode.gni exists as a compatibility stub
+    ui_mode_gni = os.path.join(src_dir, 'build', 'config', 'chromeos', 'ui_mode.gni')
+    if not os.path.exists(ui_mode_gni):
+        os.makedirs(os.path.dirname(ui_mode_gni), exist_ok=True)
+        with open(ui_mode_gni, 'w', encoding='utf-8') as f:
+            f.write('''declare_args() {
+  chromeos_is_browser_only = false
+  also_build_ash_chrome = false
+  also_build_lacros_chrome = false
+  also_build_lacros_chrome_for_architecture = ""
+}
+
+is_chromeos_ash = is_chromeos && !chromeos_is_browser_only
+is_chromeos_lacros = is_chromeos && chromeos_is_browser_only
+''')
+
     # Ensure media/media_options.gni defines system_loopback_as_aec_reference_supported
     media_options_path = os.path.join(src_dir, 'media', 'media_options.gni')
     if os.path.exists(media_options_path):
@@ -222,6 +238,28 @@ declare_args() {
 '''
             with open(media_options_path, 'w', encoding='utf-8') as f:
                 f.write(media_content)
+
+    if target_os == 'win':
+        # Patch build/toolchain/win/setup_toolchain.py to detect installed Windows SDK
+        setup_toolchain_path = os.path.join(src_dir, 'build', 'toolchain', 'win', 'setup_toolchain.py')
+        if os.path.exists(setup_toolchain_path):
+            with open(setup_toolchain_path, 'r', encoding='utf-8') as f:
+                st_code = f.read()
+            st_code = st_code.replace(
+                "args.append(SDK_VERSION)",
+                """# Auto-detect installed SDK version instead of failing on hardcoded 10.0.28000.0
+        import glob
+        installed_sdks = sorted([os.path.basename(p) for p in glob.glob(r'C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.*')])
+        if installed_sdks:
+            args.append(installed_sdks[-1])
+        else:
+            args.append(SDK_VERSION)"""
+            )
+            import re
+            pattern = r'raise Exception\(\s*\'Path "%s" from environment variable "%s" does not exist\.\s*\'\s*\'Make sure the necessary SDK is installed\.\'\s*%\s*\(part,\s*envvar\)\s*\)'
+            st_code = re.sub(pattern, 'continue', st_code)
+            with open(setup_toolchain_path, 'w', encoding='utf-8') as f:
+                f.write(st_code)
 
     thorium_patches_dir = os.path.join(thorium_dir, 'patches')
     if os.path.exists(thorium_patches_dir):
