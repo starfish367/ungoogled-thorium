@@ -70,17 +70,14 @@ def main():
     if not os.path.exists(actual_src_dir):
         print("Chromium source not found. Fetching...")
         os.makedirs(src_dir, exist_ok=True)
-        # Fetch matching tag instead of latest trunk
-        if chromium_version:
-            fetch_cmd = f"cd {src_dir} && fetch --nohooks --no-history chromium && cd src && git fetch --depth=1 origin tag {chromium_version} && git checkout {chromium_version}"
-        else:
-            print("Warning: chromium_version.txt not found. Fetching latest trunk...")
-            fetch_cmd = f"cd {src_dir} && fetch --nohooks --no-history chromium"
-
+        fetch_exec = 'fetch.bat' if sys.platform == 'win32' else 'fetch'
         for attempt in range(1, 4):
             try:
                 print(f"Fetching Chromium (attempt {attempt}/3)...")
-                run_cmd(fetch_cmd, shell=True, env=env)
+                run_cmd([fetch_exec, '--nohooks', '--no-history', 'chromium'], cwd=src_dir, env=env)
+                if chromium_version:
+                    run_cmd(['git', 'fetch', '--depth=1', 'origin', 'tag', chromium_version], cwd=actual_src_dir, env=env)
+                    run_cmd(['git', 'checkout', chromium_version], cwd=actual_src_dir, env=env)
                 break
             except Exception as e:
                 print(f"Fetch attempt {attempt} failed: {e}")

@@ -19,7 +19,7 @@ on:
 
 jobs:
   build-linux-arm64:
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.target == 'all' || inputs.target == 'linux-arm64' }}
+    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.target == 'all' || inputs.target == 'linux-arm64') && !contains(github.event.head_commit.message, '[skip-linux]') }}
     runs-on: ubuntu-24.04
     steps:
       - name: Maximize Build Space
@@ -57,7 +57,7 @@ jobs:
           path: src/src/out/Thorium_arm64/*.AppImage
 
   build-windows:
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.target == 'all' || inputs.target == 'windows-x64' }}
+    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.target == 'all' || inputs.target == 'windows-x64') && !contains(github.event.head_commit.message, '[skip-windows]') }}
     runs-on: windows-latest
     steps:
       - name: Checkout repository
