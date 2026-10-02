@@ -96,6 +96,28 @@ def main():
                             pass
                 time.sleep(10)
 
+    # Optimize .gclient to exclude heavy unused test suites like VK-GL-CTS
+    gclient_file = os.path.join(os.path.dirname(actual_src_dir), '.gclient')
+    if os.path.exists(gclient_file):
+        try:
+            with open(gclient_file, 'r') as f:
+                content = f.read()
+            if 'VK-GL-CTS' not in content:
+                content = content.replace('"custom_deps": {}', '"custom_deps": {"src/third_party/angle/third_party/VK-GL-CTS/src": None}')
+                content = content.replace('"custom_vars": {}', '"custom_vars": {"checkout_configuration": "small"}')
+                with open(gclient_file, 'w') as f:
+                    f.write(content)
+        except Exception as e:
+            print(f"Warning: could not patch .gclient: {e}")
+
+    # Restrict origin refspec in src repo so gclient sync never tries to fetch all remote branches
+    if chromium_version and os.path.exists(actual_src_dir):
+        try:
+            run_cmd(['git', 'config', 'remote.origin.fetch', f'+refs/tags/{chromium_version}:refs/tags/{chromium_version}'], cwd=actual_src_dir, env=env)
+            run_cmd(['git', 'config', 'remote.origin.tagOpt', '--no-tags'], cwd=actual_src_dir, env=env)
+        except Exception as e:
+            print(f"Warning: could not set refspec: {e}")
+
     # Use the actual chromium src dir for the rest of the script
     src_dir = actual_src_dir
 
