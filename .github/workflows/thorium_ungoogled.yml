@@ -25,7 +25,7 @@ jobs:
       - name: Maximize Build Space
         uses: easimon/maximize-build-space@master
         with:
-          root-reserve-mb: 512
+          root-reserve-mb: 4096
           temp-reserve-mb: 64
           swap-size-mb: 1024
           remove-dotnet: 'true'
@@ -46,9 +46,14 @@ jobs:
         uses: mozilla-actions/sccache-action@v0.0.4
 
       - name: Run Build Script
-        run: python build_thorium_ungoogled.py --target-os linux --target-cpu arm64 --src-dir src
+        run: |
+          mkdir -p ~/.cache "${GITHUB_WORKSPACE}/.cache"
+          python build_thorium_ungoogled.py --target-os linux --target-cpu arm64 --src-dir src
         env:
           SCCACHE_GHA_ENABLED: "true"
+          XDG_CACHE_HOME: "${{ github.workspace }}/.cache"
+          VPYTHON_VIRTUALENV_ROOT: "${{ github.workspace }}/.cache/vpython"
+          CIPD_CACHE_DIR: "${{ github.workspace }}/.cache/cipd"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -84,7 +89,7 @@ jobs:
         uses: mozilla-actions/sccache-action@v0.0.4
 
       - name: Run Build Script
-        run: python build_thorium_ungoogled.py --target-os win --target-cpu x64 --src-dir C:\src
+        run: python build_thorium_ungoogled.py --target-os win --target-cpu x64 --src-dir D:\src
         env:
           SCCACHE_GHA_ENABLED: "true"
           DEPOT_TOOLS_WIN_TOOLCHAIN: "0"
@@ -93,4 +98,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Thorium-Ungoogled-Win-x64
-          path: C:\src\src\out\Thorium_x64\mini_installer.exe
+          path: D:\src\src\out\Thorium_x64\mini_installer.exe
