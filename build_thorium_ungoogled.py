@@ -153,31 +153,29 @@ def main():
 
     # Apply Thorium modifications
     print("Applying Thorium overlay and patches...")
-    # Preserve Chromium's original BUILDCONFIG.gn so declarations like enable_strict_deps aren't lost
-    buildconfig_path = os.path.join(src_dir, 'build', 'config', 'BUILDCONFIG.gn')
-    original_buildconfig = None
-    if os.path.exists(buildconfig_path):
-        with open(buildconfig_path, 'r', encoding='utf-8') as f:
-            original_buildconfig = f.read()
+    # Preserve Chromium's original BUILDCONFIG.gn and arm.gni so declarations aren't lost
+    preserved_files = {}
+    for rel_path in ['build/config/BUILDCONFIG.gn', 'build/config/arm.gni']:
+        full_path = os.path.join(src_dir, rel_path)
+        if os.path.exists(full_path):
+            with open(full_path, 'r', encoding='utf-8') as f:
+                preserved_files[rel_path] = f.read()
 
     thorium_src_overlay = os.path.join(thorium_dir, 'src')
     if os.path.exists(thorium_src_overlay):
         print(f"Copying Thorium overlay from {thorium_src_overlay} to {src_dir}...")
         shutil.copytree(thorium_src_overlay, src_dir, dirs_exist_ok=True)
 
-    # Ensure BUILDCONFIG.gn preserves all Chromium 154 declarations and includes Thorium SIMD config
-    bc_content = original_buildconfig if original_buildconfig else ""
-    if not bc_content and os.path.exists(buildconfig_path):
-        with open(buildconfig_path, 'r', encoding='utf-8') as f:
-            bc_content = f.read()
-
-    if bc_content:
-        if 'enable_strict_deps' not in bc_content:
-            bc_content += '\ndeclare_args() {\n  enable_strict_deps = false\n  default_modulemap_mode = "none"\n}\n'
-        if 'thorium_simd_optimization' not in bc_content:
-            bc_content += '\n# Thorium SIMD optimization config\ndefault_compiler_configs += [ "//build/config/compiler:thorium_simd_optimization" ]\n'
-        with open(buildconfig_path, 'w', encoding='utf-8') as f:
-            f.write(bc_content)
+    # Restore preserved files
+    for rel_path, content in preserved_files.items():
+        full_path = os.path.join(src_dir, rel_path)
+        if rel_path == 'build/config/BUILDCONFIG.gn':
+            if 'enable_strict_deps' not in content:
+                content += '\ndeclare_args() {\n  enable_strict_deps = false\n  default_modulemap_mode = "none"\n}\n'
+            if 'thorium_simd_optimization' not in content:
+                content += '\n# Thorium SIMD optimization config\ndefault_compiler_configs += [ "//build/config/compiler:thorium_simd_optimization" ]\n'
+        with open(full_path, 'w', encoding='utf-8') as f:
+            f.write(content)
 
     thorium_patches_dir = os.path.join(thorium_dir, 'patches')
     if os.path.exists(thorium_patches_dir):
