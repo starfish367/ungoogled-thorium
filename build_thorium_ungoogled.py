@@ -179,9 +179,9 @@ def main():
 
     # Apply Thorium modifications
     print("Applying Thorium overlay and patches...")
-    # Preserve Chromium's original BUILDCONFIG.gn and arm.gni so declarations aren't lost
+    # Preserve Chromium's original root build configs and scripts so declarations and toolchains aren't broken
     preserved_files = {}
-    for rel_path in ['build/config/BUILDCONFIG.gn', 'build/config/arm.gni']:
+    for rel_path in ['BUILD.gn', 'build/vs_toolchain.py', 'build/config/BUILDCONFIG.gn', 'build/config/arm.gni']:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
             with open(full_path, 'r', encoding='utf-8') as f:
@@ -200,6 +200,9 @@ def main():
                 content += '\ndeclare_args() {\n  enable_strict_deps = false\n  default_modulemap_mode = "none"\n}\n'
             if 'thorium_simd_optimization' not in content:
                 content += '\n# Thorium SIMD optimization config\ndefault_compiler_configs += [ "//build/config/compiler:thorium_simd_optimization" ]\n'
+        elif rel_path == 'BUILD.gn':
+            if 'group("thorium")' not in content:
+                content += '\n# Thorium target group\ngroup("thorium") {\n  public_deps = [ "//chrome" ]\n}\n'
         with open(full_path, 'w', encoding='utf-8') as f:
             f.write(content)
 
