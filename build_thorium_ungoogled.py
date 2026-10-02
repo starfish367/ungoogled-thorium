@@ -56,8 +56,6 @@ def main():
 
     # Configure git for large repositories to prevent schannel/RPC drops
     run_cmd(['git', 'config', '--global', 'http.postBuffer', '1048576000'])
-    run_cmd(['git', 'config', '--global', 'http.lowSpeedLimit', '1000'])
-    run_cmd(['git', 'config', '--global', 'http.lowSpeedTime', '60'])
     if sys.platform == 'win32':
         run_cmd(['git', 'config', '--global', 'http.sslBackend', 'openssl'])
         run_cmd(['git', 'config', '--global', 'core.longpaths', 'true'])
@@ -85,6 +83,8 @@ def main():
                 if chromium_version:
                     run_cmd(['git', 'fetch', '--depth=1', 'origin', 'tag', chromium_version], cwd=actual_src_dir, env=env)
                     run_cmd(['git', 'checkout', chromium_version], cwd=actual_src_dir, env=env)
+                    run_cmd(['git', 'config', 'remote.origin.fetch', f'+refs/tags/{chromium_version}:refs/tags/{chromium_version}'], cwd=actual_src_dir, env=env)
+                    run_cmd(['git', 'config', 'remote.origin.tagOpt', '--no-tags'], cwd=actual_src_dir, env=env)
                 break
             except Exception as e:
                 print(f"Fetch attempt {attempt} failed: {e}")
