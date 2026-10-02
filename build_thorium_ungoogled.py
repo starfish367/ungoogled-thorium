@@ -208,6 +208,21 @@ def main():
         with open(full_path, 'w', encoding='utf-8') as f:
             f.write(content)
 
+    # Ensure media/media_options.gni defines system_loopback_as_aec_reference_supported
+    media_options_path = os.path.join(src_dir, 'media', 'media_options.gni')
+    if os.path.exists(media_options_path):
+        with open(media_options_path, 'r', encoding='utf-8') as f:
+            media_content = f.read()
+        if 'system_loopback_as_aec_reference_supported' not in media_content:
+            media_content += '''
+declare_args() {
+  system_loopback_as_aec_reference_supported =
+      (is_win || is_mac) && chrome_wide_echo_cancellation_supported
+}
+'''
+            with open(media_options_path, 'w', encoding='utf-8') as f:
+                f.write(media_content)
+
     thorium_patches_dir = os.path.join(thorium_dir, 'patches')
     if os.path.exists(thorium_patches_dir):
         for patch_file in sorted(os.listdir(thorium_patches_dir)):
