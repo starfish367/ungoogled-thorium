@@ -7,6 +7,8 @@ import glob
 
 def run_cmd(cmd, cwd=None, env=None, check=True, shell=False):
     print(f"Running: {' '.join(cmd) if isinstance(cmd, list) else cmd}")
+    if sys.platform == 'win32':
+        shell = True
     subprocess.run(cmd, cwd=cwd, env=env, check=check, shell=shell)
 
 def get_chromium_version(root_dir):
@@ -109,7 +111,7 @@ def main():
                 patch_path = os.path.join(thorium_patches_dir, patch_file)
                 print(f"Applying Thorium patch: {patch_file}")
                 # Use patch command. On windows, we prepended Git/usr/bin to PATH.
-                subprocess.run(['patch', '-p1', '--forward', '-i', patch_path], cwd=src_dir, env=env)
+                run_cmd(['patch', '-p1', '--forward', '-i', patch_path], cwd=src_dir, env=env, check=False)
 
     # Prepare GN args
     gn_args = []
