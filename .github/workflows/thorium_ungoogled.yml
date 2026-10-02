@@ -92,6 +92,8 @@ jobs:
         run: python build_thorium_ungoogled.py --target-os win --target-cpu x64 --src-dir D:\src
         env:
           SCCACHE_GHA_ENABLED: "true"
+          SCCACHE_DIR: "D:\\.sccache"
+          SCCACHE_CACHE_SIZE: "20G"
           DEPOT_TOOLS_WIN_TOOLCHAIN: "0"
 
       - name: Upload Artifact

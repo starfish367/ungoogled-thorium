@@ -9,8 +9,12 @@ import urllib.request
 import zipfile
 
 def run_cmd(cmd, cwd=None, env=None, check=True, shell=False):
-    print(f"Running: {' '.join(cmd) if isinstance(cmd, list) else cmd}")
-    if sys.platform == 'win32':
+    if isinstance(cmd, list):
+        print(f"Running: {' '.join(str(c) for c in cmd)}")
+        if sys.platform == 'win32' and any(str(cmd[0]).lower().endswith(ext) for ext in ['.bat', '.cmd']):
+            shell = True
+    else:
+        print(f"Running: {cmd}")
         shell = True
     subprocess.run(cmd, cwd=cwd, env=env, check=check, shell=shell)
 
@@ -52,10 +56,11 @@ def main():
 
     # Configure git for large repositories to prevent schannel/RPC drops
     run_cmd(['git', 'config', '--global', 'http.postBuffer', '1048576000'])
-    run_cmd(['git', 'config', '--global', 'http.lowSpeedLimit', '0'])
-    run_cmd(['git', 'config', '--global', 'http.lowSpeedTime', '999999'])
+    run_cmd(['git', 'config', '--global', 'http.lowSpeedLimit', '1000'])
+    run_cmd(['git', 'config', '--global', 'http.lowSpeedTime', '60'])
     if sys.platform == 'win32':
         run_cmd(['git', 'config', '--global', 'http.sslBackend', 'openssl'])
+        run_cmd(['git', 'config', '--global', 'core.longpaths', 'true'])
 
     # Ensure depot tools is updated so fetch works
     update_cmd = 'update_depot_tools.bat' if sys.platform == 'win32' else 'update_depot_tools'
@@ -148,12 +153,31 @@ def main():
 
     # Apply Thorium modifications
     print("Applying Thorium overlay and patches...")
+    # Preserve Chromium's original BUILDCONFIG.gn so declarations like enable_strict_deps aren't lost
+    buildconfig_path = os.path.join(src_dir, 'build', 'config', 'BUILDCONFIG.gn')
+    original_buildconfig = None
+    if os.path.exists(buildconfig_path):
+        with open(buildconfig_path, 'r', encoding='utf-8') as f:
+            original_buildconfig = f.read()
+
     thorium_src_overlay = os.path.join(thorium_dir, 'src')
     if os.path.exists(thorium_src_overlay):
-        if sys.platform == 'win32':
-            run_cmd(f"xcopy /E /I /Y {thorium_src_overlay}\\* {src_dir}\\")
-        else:
-            run_cmd(f"cp -r {thorium_src_overlay}/* {src_dir}/", shell=True)
+        print(f"Copying Thorium overlay from {thorium_src_overlay} to {src_dir}...")
+        shutil.copytree(thorium_src_overlay, src_dir, dirs_exist_ok=True)
+
+    # Ensure BUILDCONFIG.gn preserves all Chromium 154 declarations and includes Thorium SIMD config
+    bc_content = original_buildconfig if original_buildconfig else ""
+    if not bc_content and os.path.exists(buildconfig_path):
+        with open(buildconfig_path, 'r', encoding='utf-8') as f:
+            bc_content = f.read()
+
+    if bc_content:
+        if 'enable_strict_deps' not in bc_content:
+            bc_content += '\ndeclare_args() {\n  enable_strict_deps = false\n  default_modulemap_mode = "none"\n}\n'
+        if 'thorium_simd_optimization' not in bc_content:
+            bc_content += '\n# Thorium SIMD optimization config\ndefault_compiler_configs += [ "//build/config/compiler:thorium_simd_optimization" ]\n'
+        with open(buildconfig_path, 'w', encoding='utf-8') as f:
+            f.write(bc_content)
 
     thorium_patches_dir = os.path.join(thorium_dir, 'patches')
     if os.path.exists(thorium_patches_dir):
@@ -188,7 +212,7 @@ def main():
         gn_args.append('use_sysroot=true')
         gn_args.append('enable_nacl=false')
     elif target_os == 'win':
-        gn_args.append('is_component_build=false')
+        gn_args.append('enable_nacl=false')
 
     out_dir = f"out/Thorium_{target_cpu}"
     out_path = os.path.join(src_dir, out_dir)
@@ -197,7 +221,8 @@ def main():
         f.write('\n'.join(gn_args))
 
     print("Ensuring gn executable is available...")
-    gn_bin = os.path.join(src_dir, 'buildtools', 'win' if sys.platform == 'win32' else 'linux64', 'gn.exe' if sys.platform == 'win32' else 'gn')
+    buildtools_platform = 'win' if sys.platform == 'win32' else 'linux64'
+    gn_bin = os.path.join(src_dir, 'buildtools', buildtools_platform, 'gn.exe' if sys.platform == 'win32' else 'gn')
     if not os.path.exists(gn_bin):
         os.makedirs(os.path.dirname(gn_bin), exist_ok=True)
         platform_name = 'windows-amd64' if sys.platform == 'win32' else 'linux-amd64'
@@ -212,6 +237,17 @@ def main():
             os.chmod(gn_bin, 0o755)
         if os.path.exists(temp_zip):
             os.remove(temp_zip)
+
+    # Prepend gn directory to PATH so gn can be invoked directly
+    env['PATH'] = f"{os.path.dirname(gn_bin)}{sep}{env['PATH']}"
+
+    # Also copy to third_party/gn/ if it exists or for depot_tools gn.py wrapper
+    tp_gn_dir = os.path.join(src_dir, 'third_party', 'gn')
+    os.makedirs(tp_gn_dir, exist_ok=True)
+    tp_gn = os.path.join(tp_gn_dir, 'gn.exe' if sys.platform == 'win32' else 'gn')
+    shutil.copy2(gn_bin, tp_gn)
+    if sys.platform != 'win32':
+        os.chmod(tp_gn, 0o755)
 
     print(f"Running gn gen using {gn_bin}...")
     run_cmd([gn_bin, 'gen', out_dir], cwd=src_dir, env=env)
