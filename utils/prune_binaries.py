@@ -161,7 +161,7 @@ KEEP_FILES = (
 KEEP_SUFFIXES = ('.gn', '.gni', '.grd', '.grdp', '.isolate', '.pydeps')
 
 
-def prune_files(unpack_root, prune_list):
+def prune_files(unpack_root, prune_list, ignore_missing=False):
     """
     Delete files under unpack_root listed in prune_list. Returns an iterable of unremovable files.
 
@@ -179,7 +179,8 @@ def prune_files(unpack_root, prune_list):
             os.chmod(file_path, stat.S_IWRITE)
             file_path.unlink()
         except FileNotFoundError:
-            unremovable_files.add(Path(relative_file).as_posix())
+            if not ignore_missing:
+                unremovable_files.add(Path(relative_file).as_posix())
     return unremovable_files
 
 
@@ -238,7 +239,7 @@ def _callback(args):
         get_logger().error('Could not find the pruning list: %s', args.pruning_list)
     prune_dirs(args.directory, args.keep_contingent_paths, args.sysroot)
     prune_list = tuple(filter(len, args.pruning_list.read_text(encoding=ENCODING).splitlines()))
-    unremovable_files = prune_files(args.directory, prune_list)
+    unremovable_files = prune_files(args.directory, prune_list, ignore_missing=args.ignore_missing)
     if unremovable_files:
         file_list = '\n'.join(f for f in itertools.islice(unremovable_files, 5))
         if len(unremovable_files) > 5:
@@ -258,6 +259,9 @@ def main():
                         action='store_true',
                         help=('Skip pruning the contingent paths. '
                               'Useful when building with the Google tooling is desired.'))
+    parser.add_argument('--ignore-missing',
+                        action='store_true',
+                        help=('Ignore files in pruning list that are already missing in the checkout.'))
     parser.add_argument('--sysroot',
                         choices=('amd64', 'i386'),
                         help=('Skip pruning the sysroot for the specified architecture. '

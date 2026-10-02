@@ -145,7 +145,7 @@ def main():
 
     # Apply ungoogled-chromium modifications
     print("Applying ungoogled-chromium modifications...")
-    run_cmd([sys.executable, 'utils/prune_binaries.py', src_dir, 'pruning.list'], cwd=root_dir)
+    run_cmd([sys.executable, 'utils/prune_binaries.py', '--ignore-missing', src_dir, 'pruning.list'], cwd=root_dir)
     run_cmd([sys.executable, 'utils/patches.py', 'apply', src_dir, 'patches'], cwd=root_dir)
 
     # Apply domain substitution. Do NOT pass chromium_version.txt to -c (cache).
