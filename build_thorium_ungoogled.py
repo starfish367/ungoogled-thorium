@@ -164,11 +164,18 @@ def main():
 
     # Apply ungoogled-chromium modifications
     print("Applying ungoogled-chromium modifications...")
-    run_cmd([sys.executable, 'utils/prune_binaries.py', '--ignore-missing', src_dir, 'pruning.list'], cwd=root_dir)
+    run_cmd([sys.executable, 'utils/prune_binaries.py', '--ignore-missing', '--keep-contingent-paths', src_dir, 'pruning.list'], cwd=root_dir)
     run_cmd([sys.executable, 'utils/patches.py', 'apply', src_dir, 'patches'], cwd=root_dir)
 
     # Apply domain substitution. Do NOT pass chromium_version.txt to -c (cache).
     run_cmd([sys.executable, 'utils/domain_substitution.py', 'apply', '-r', 'domain_regex.list', '-f', 'domain_substitution.list', src_dir], cwd=root_dir)
+
+    # Ensure rust toolchain VERSION file exists so gn gen never fails
+    rust_version_file = os.path.join(src_dir, 'third_party', 'rust-toolchain', 'VERSION')
+    if not os.path.exists(rust_version_file):
+        os.makedirs(os.path.dirname(rust_version_file), exist_ok=True)
+        with open(rust_version_file, 'w', encoding='utf-8') as f:
+            f.write("rustc 1.88.0 (chromium)\n")
 
     # Apply Thorium modifications
     print("Applying Thorium overlay and patches...")
