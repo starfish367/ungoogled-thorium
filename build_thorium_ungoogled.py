@@ -5,6 +5,8 @@ import sys
 import shutil
 import glob
 import time
+import urllib.request
+import zipfile
 
 def run_cmd(cmd, cwd=None, env=None, check=True, shell=False):
     print(f"Running: {' '.join(cmd) if isinstance(cmd, list) else cmd}")
@@ -191,13 +193,28 @@ def main():
     out_dir = f"out/Thorium_{target_cpu}"
     out_path = os.path.join(src_dir, out_dir)
     os.makedirs(out_path, exist_ok=True)
-
     with open(os.path.join(out_path, 'args.gn'), 'w') as f:
         f.write('\n'.join(gn_args))
 
-    print("Running gn gen...")
-    gn_cmd = 'gn.bat' if sys.platform == 'win32' else 'gn'
-    run_cmd([gn_cmd, 'gen', out_dir], cwd=src_dir, env=env)
+    print("Ensuring gn executable is available...")
+    gn_bin = os.path.join(src_dir, 'buildtools', 'win' if sys.platform == 'win32' else 'linux64', 'gn.exe' if sys.platform == 'win32' else 'gn')
+    if not os.path.exists(gn_bin):
+        os.makedirs(os.path.dirname(gn_bin), exist_ok=True)
+        platform_name = 'windows-amd64' if sys.platform == 'win32' else 'linux-amd64'
+        gn_zip_url = f"https://chrome-infra-packages.appspot.com/dl/gn/gn/{platform_name}/+/latest"
+        temp_zip = os.path.join(root_dir, 'gn_bin.zip')
+        print(f"Downloading GN from {gn_zip_url}...")
+        urllib.request.urlretrieve(gn_zip_url, temp_zip)
+        with zipfile.ZipFile(temp_zip, 'r') as zf:
+            member = 'gn.exe' if sys.platform == 'win32' else 'gn'
+            zf.extract(member, os.path.dirname(gn_bin))
+        if sys.platform != 'win32':
+            os.chmod(gn_bin, 0o755)
+        if os.path.exists(temp_zip):
+            os.remove(temp_zip)
+
+    print(f"Running gn gen using {gn_bin}...")
+    run_cmd([gn_bin, 'gen', out_dir], cwd=src_dir, env=env)
 
     # Free up 15-20 GB of disk space before ninja compilation by removing the .git directory
     print("Cleaning up .git to maximize compilation disk space...")
