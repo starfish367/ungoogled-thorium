@@ -210,8 +210,6 @@ declare_args() {
   lacros_use_chromium_toolchain = false
   android_full_debug = false
   is_high_end_android = false
-  use_libcxx_modules = false
-  use_explicit_libcxx_modules = false
   allow_runtime_configurable_key_storage = false
   is_thorium_build = true
   is_raspi = false
@@ -237,8 +235,6 @@ is_castos = false
 lacros_use_chromium_toolchain = false
 android_full_debug = false
 is_high_end_android = false
-use_libcxx_modules = false
-use_explicit_libcxx_modules = false
 allow_runtime_configurable_key_storage = false
 is_thorium_build = true
 is_raspi = false
@@ -377,15 +373,16 @@ declare_args() {
                 with open(cros_full, 'w', encoding='utf-8') as f:
                     f.write(cros_code)
 
-    # Ensure build/config/c++/c++.gni defines use_libcxx_modules
-    cxx_gni = os.path.join(src_dir, 'build', 'config', 'c++', 'c++.gni')
-    if os.path.exists(cxx_gni):
-        with open(cxx_gni, 'r', encoding='utf-8') as f:
-            cxx_code = f.read()
-        if 'use_libcxx_modules' not in cxx_code:
-            cxx_code += '\nuse_libcxx_modules = false\nuse_explicit_libcxx_modules = false\n'
-            with open(cxx_gni, 'w', encoding='utf-8') as f:
-                f.write(cxx_code)
+    # Patch build/config/compiler/BUILD.gn to safely handle use_libcxx_modules
+    compiler_build_gn = os.path.join(src_dir, 'build', 'config', 'compiler', 'BUILD.gn')
+    if os.path.exists(compiler_build_gn):
+        with open(compiler_build_gn, 'r', encoding='utf-8') as f:
+            cbg = f.read()
+        if 'use_libcxx_modules' in cbg:
+            cbg = cbg.replace('if (use_libcxx_modules)', 'if (false)')
+            cbg = cbg.replace('if (use_explicit_libcxx_modules)', 'if (false)')
+            with open(compiler_build_gn, 'w', encoding='utf-8') as f:
+                f.write(cbg)
 
     # Ensure legacy .gni files exist for Thorium overlay compatibility
     legacy_gni_files = {
