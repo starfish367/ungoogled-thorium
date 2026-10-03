@@ -183,7 +183,7 @@ def main():
     print("Applying Thorium overlay and patches...")
     # Preserve Chromium's original root build configs and scripts so declarations and toolchains aren't broken
     preserved_files = {}
-    for rel_path in ['BUILD.gn', 'build/vs_toolchain.py', 'build/config/BUILDCONFIG.gn', 'build/config/arm.gni', 'content/test/BUILD.gn', 'components/BUILD.gn', 'v8/BUILD.gn']:
+    for rel_path in ['BUILD.gn', 'build/vs_toolchain.py', 'build/config/BUILDCONFIG.gn', 'build/config/arm.gni', 'content/test/BUILD.gn', 'components/BUILD.gn', 'v8/BUILD.gn', 'content/shell/BUILD.gn']:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
             with open(full_path, 'r', encoding='utf-8') as f:
@@ -224,6 +224,48 @@ is_chromeos_lacros = is_chromeos && chromeos_is_browser_only
         'chrome/enterprise_companion/buildflags.gni': 'declare_args() {\n  enable_chrome_enterprise_companion = false\n}\n',
         'chromeos/ash/components/assistant/assistant.gni': 'declare_args() {\n  enable_cros_libassistant = false\n}\n',
         'components/nacl/features.gni': 'declare_args() {\n  enable_nacl = false\n}\n',
+        'ppapi/buildflags/buildflags.gni': '''declare_args() {
+  enable_plugins = false
+  enable_ppapi = false
+}
+''',
+        'ppapi/buildflags/BUILD.gn': '''import("//build/buildflag_header.gni")
+import("//ppapi/buildflags/buildflags.gni")
+
+buildflag_header("buildflags") {
+  header = "buildflags.h"
+  flags = [
+    "ENABLE_PLUGINS=$enable_plugins",
+    "ENABLE_PPAPI=$enable_ppapi",
+  ]
+}
+''',
+        'ppapi/buildflags/buildflags.h': '''#ifndef PPAPI_BUILDFLAGS_BUILDFLAGS_H_
+#define PPAPI_BUILDFLAGS_BUILDFLAGS_H_
+
+#include "build/buildflag.h"
+
+#define BUILDFLAG_INTERNAL_ENABLE_PLUGINS() (0)
+#define BUILDFLAG_INTERNAL_ENABLE_PPAPI() (0)
+
+#endif  // PPAPI_BUILDFLAGS_BUILDFLAGS_H_
+''',
+        'chrome/browser/request_header_integrity/buildflags.gni': '''declare_args() {
+  enable_request_header_integrity = false
+}
+''',
+        'components/sharing_message/buildflags.gni': '''declare_args() {
+  enable_sharing_message = false
+}
+''',
+        'services/accessibility/buildflags.gni': '''declare_args() {
+  enable_accessibility_service = false
+}
+''',
+        'chromeos/components/libsegmentation/buildflags.gni': '''declare_args() {
+  enable_cros_libsegmentation = false
+}
+''',
     }
     for stub_rel, stub_code in stubs.items():
         stub_full = os.path.join(src_dir, stub_rel)
