@@ -216,6 +216,13 @@ declare_args() {
   is_thorium_build = true
   is_raspi = false
   is_chancie_wancie_build = false
+  enable_glic = false
+  enterprise_telomere_reporting = false
+  use_minikin_hyphenation = false
+  allow_oop_video_decoder = false
+  use_safe_libcxx = false
+  export_libcxxabi_from_executables = false
+  dfmify_dev_ui = false
 }
 '''
             if 'is_nacl = false' not in content:
@@ -239,6 +246,13 @@ allow_runtime_configurable_key_storage = false
 is_thorium_build = true
 is_raspi = false
 is_chancie_wancie_build = false
+enable_glic = false
+enterprise_telomere_reporting = false
+use_minikin_hyphenation = false
+allow_oop_video_decoder = false
+use_safe_libcxx = false
+export_libcxxabi_from_executables = false
+dfmify_dev_ui = false
 '''
             if 'thorium_simd_optimization' not in content:
                 content += '\n# Thorium SIMD optimization config\ndefault_compiler_configs += [ "//build/config/compiler:thorium_simd_optimization" ]\n'
