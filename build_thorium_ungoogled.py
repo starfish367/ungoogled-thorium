@@ -183,7 +183,26 @@ def main():
     print("Applying Thorium overlay and patches...")
     # Preserve Chromium's original root build configs and scripts so declarations and toolchains aren't broken
     preserved_files = {}
-    for rel_path in ['BUILD.gn', 'build/vs_toolchain.py', 'build/config/BUILDCONFIG.gn', 'build/config/arm.gni', 'content/test/BUILD.gn', 'components/BUILD.gn', 'v8/BUILD.gn', 'content/shell/BUILD.gn', 'media/media_options.gni']:
+    for rel_path in [
+        'BUILD.gn',
+        'build/vs_toolchain.py',
+        'build/config/BUILDCONFIG.gn',
+        'build/config/arm.gni',
+        'chrome/BUILD.gn',
+        'chrome/browser/BUILD.gn',
+        'content/browser/BUILD.gn',
+        'content/gpu/BUILD.gn',
+        'content/test/BUILD.gn',
+        'content/shell/BUILD.gn',
+        'components/BUILD.gn',
+        'v8/BUILD.gn',
+        'sandbox/linux/BUILD.gn',
+        'tools/v8_context_snapshot/BUILD.gn',
+        'build/config/android/BUILD.gn',
+        'build/config/mac/BUILD.gn',
+        'ui/webui/resources/images/BUILD.gn',
+        'media/media_options.gni',
+    ]:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
             with open(full_path, 'r', encoding='utf-8') as f:
@@ -252,6 +271,20 @@ build_with_tflite_lib = false
         elif rel_path == 'media/media_options.gni':
             if 'enable_platform_vvc' not in content:
                 content += '\ndeclare_args() {\n  enable_platform_vvc = false\n}\n'
+        elif rel_path == 'chrome/BUILD.gn':
+            content = content.replace('_chrome_output_name = "initialexe/chrome"', '_chrome_output_name = "initialexe/thorium"')
+            content = content.replace('_chrome_output_name = "chrome"', '_chrome_output_name = "thorium"')
+            content = content.replace('"$root_out_dir/initialexe/chrome.exe"', '"$root_out_dir/initialexe/thorium.exe"')
+            content = content.replace('"$root_out_dir/initialexe/chrome.exe.pdb"', '"$root_out_dir/initialexe/thorium.exe.pdb"')
+            content = content.replace('"$root_out_dir/chrome.exe"', '"$root_out_dir/thorium.exe"')
+            content = content.replace('"$root_out_dir/chrome.exe.pdb"', '"$root_out_dir/thorium.exe.pdb"')
+            content = content.replace('binary = "$root_out_dir/chrome"', 'binary = "$root_out_dir/thorium"')
+        elif rel_path == 'chrome/browser/BUILD.gn':
+            if 'thorium_flag_choices.h' not in content and '"about_flags.cc",' in content:
+                content = content.replace(
+                    '"about_flags.cc",',
+                    '"about_flags.cc",\n    "thorium_flag_choices.h",\n    "thorium_flag_entries.h",'
+                )
         with open(full_path, 'w', encoding='utf-8') as f:
             f.write(content)
 
@@ -329,6 +362,35 @@ buildflag_header("buildflags") {
 
 group("component_bundle") {
   public_deps = [ "//chrome/browser/web_applications/isolated_web_apps/key_distribution/preload:component_bundle" ]
+}
+''',
+        # Stubs for relocated device_trust attestation targets in Chromium 154
+        'chrome/browser/enterprise/connectors/device_trust/attestation/common/BUILD.gn': '''group("types") {
+  public_deps = [ "//components/enterprise/device_trust/core/attestation:types" ]
+}
+
+group("common") {
+  public_deps = [ "//components/enterprise/device_trust/core/attestation" ]
+}
+''',
+        'chrome/browser/enterprise/connectors/device_trust/attestation/common/proto/BUILD.gn': '''group("attestation_ca_proto") {
+  public_deps = [ "//components/enterprise/device_trust/core/attestation/proto:attestation_ca_proto" ]
+}
+
+group("google_key_proto") {
+  public_deps = [ "//components/enterprise/device_trust/core/attestation/proto:google_key_proto" ]
+}
+
+group("interface_proto") {
+  public_deps = [ "//components/enterprise/device_trust/core/attestation/proto:interface_proto" ]
+}
+''',
+        'chrome/browser/enterprise/connectors/device_trust/common/BUILD.gn': '''group("common") {
+  public_deps = [ "//components/enterprise/device_trust/core" ]
+}
+''',
+        'chrome/browser/enterprise/connectors/device_trust/signals/decorators/common/BUILD.gn': '''group("common") {
+  public_deps = [ "//components/enterprise/device_trust/core/signals" ]
 }
 ''',
     }
@@ -588,21 +650,68 @@ declare_args() {
         appdir = os.path.join(src_dir, out_dir, 'Thorium.AppDir')
         if os.path.exists(appdir):
             shutil.rmtree(appdir)
-        os.makedirs(appdir)
+        os.makedirs(appdir, exist_ok=True)
 
-        run_cmd(f"cp -r {appimage_dir}/AppDir/* {appdir}/", shell=True)
+        appdir_src = os.path.join(appimage_dir, 'AppDir')
+        if os.path.exists(appdir_src):
+            run_cmd(f"cp -r {appdir_src}/* {appdir}/", shell=True)
 
-        for item in ['chrome', 'chrome_crashpad_handler', 'icudtl.dat', 'locales', 'MEIPreload']:
+        for item in ['chrome', 'thorium', 'chrome_crashpad_handler', 'icudtl.dat', 'locales', 'MEIPreload']:
             src_item = os.path.join(src_dir, out_dir, item)
             if os.path.exists(src_item):
                 run_cmd(f"cp -r {src_item} {appdir}/", shell=True)
+                if item == 'chrome' and not os.path.exists(os.path.join(appdir, 'thorium')):
+                    run_cmd(f"cp -r {src_item} {appdir}/thorium", shell=True)
+                elif item == 'thorium' and not os.path.exists(os.path.join(appdir, 'chrome')):
+                    run_cmd(f"cp -r {src_item} {appdir}/chrome", shell=True)
 
-        for file in glob.glob(os.path.join(src_dir, out_dir, '*.bin')) + glob.glob(os.path.join(src_dir, out_dir, '*.pak')):
+        for file in glob.glob(os.path.join(src_dir, out_dir, '*.bin')) + glob.glob(os.path.join(src_dir, out_dir, '*.pak')) + glob.glob(os.path.join(src_dir, out_dir, '*.so')):
             if os.path.exists(file):
                 run_cmd(f"cp -r {file} {appdir}/", shell=True)
 
+        apprun_path = os.path.join(appdir, 'AppRun')
+        if not os.path.exists(apprun_path):
+            with open(apprun_path, 'w', encoding='utf-8') as f:
+                f.write('''#!/bin/sh
+HERE=$(dirname $(readlink -f "${0}"))
+export LD_LIBRARY_PATH="${HERE}"/usr/lib:"${HERE}":$LD_LIBRARY_PATH
+if [ -x "${HERE}"/thorium ]; then
+  exec "${HERE}"/thorium --no-default-browser-check "$@"
+elif [ -x "${HERE}"/chrome ]; then
+  exec "${HERE}"/chrome --no-default-browser-check "$@"
+else
+  echo "Error: Thorium/Chrome binary not found in AppImage" >&2
+  exit 1
+fi
+''')
+            os.chmod(apprun_path, 0o755)
+
+        desktop_path = os.path.join(appdir, 'thorium-browser.desktop')
+        if not os.path.exists(desktop_path):
+            with open(desktop_path, 'w', encoding='utf-8') as f:
+                f.write('''[Desktop Entry]
+Version=1.0
+Name=Thorium Browser
+GenericName=Web Browser
+Comment=Access the Internet
+Exec=AppRun --no-default-browser-check %U
+StartupWMClass=thorium
+Icon=thorium
+Terminal=false
+Type=Application
+Categories=Network;WebBrowser;
+MimeType=text/html;text/xml;application/xhtml_xml;x-scheme-handler/http;x-scheme-handler/https;
+''')
+            os.chmod(desktop_path, 0o755)
+
+        icon_path = os.path.join(appdir, 'thorium.png')
+        if not os.path.exists(icon_path):
+            logo_512 = os.path.join(thorium_dir, 'infra', 'APPIMAGE', 'files', 'product_logo_512.png')
+            if os.path.exists(logo_512):
+                shutil.copy(logo_512, icon_path)
+
         run_cmd([appimagetool_path, appdir], cwd=os.path.join(src_dir, out_dir), env=appimage_env)
-        print(f"Build complete. Binary is at {os.path.join(src_dir, out_dir, 'chrome')} and AppImage created.")
+        print(f"Build complete. AppImage created in {os.path.join(src_dir, out_dir)}.")
     elif target_os == 'win':
         print(f"Build complete. Installer is at {os.path.join(src_dir, out_dir, 'mini_installer.exe')}")
 
