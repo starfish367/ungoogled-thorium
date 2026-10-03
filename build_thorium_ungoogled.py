@@ -200,6 +200,8 @@ def main():
         'tools/v8_context_snapshot/BUILD.gn',
         'build/config/android/BUILD.gn',
         'build/config/mac/BUILD.gn',
+        'build/config/win/BUILD.gn',
+        'build/config/compiler/BUILD.gn',
         'ui/webui/resources/images/BUILD.gn',
         'media/media_options.gni',
     ]:
@@ -285,6 +287,129 @@ build_with_tflite_lib = false
                     '"about_flags.cc",',
                     '"about_flags.cc",\n    "thorium_flag_choices.h",\n    "thorium_flag_entries.h",'
                 )
+        elif rel_path == 'build/config/compiler/BUILD.gn':
+            if 'thorium_simd_optimization' not in content:
+                content += '''
+import("//build/config/compiler_opt.gni")
+
+# Thorium SIMD optimizations
+config("thorium_simd_optimization") {
+  cflags = []
+  ldflags = []
+  if (current_cpu == "x86") {
+    if (is_win) {
+      if (use_sse2) {
+        cflags += [ "/arch:SSE2", "/clang:-msse2", ]
+      }
+      if (use_sse3) {
+        cflags += [ "/clang:-msse3", ]
+      }
+      if (use_sse41) {
+        cflags += [ "/clang:-mssse3", "/clang:-msse4.1", ]
+      }
+      if (use_sse42) {
+        cflags += [ "/clang:-msse4.2", ]
+      }
+    } else {
+      if (use_sse2) {
+        cflags += [ "-msse2", ]
+        ldflags += [ "-msse2", ]
+      }
+      if (use_sse3) {
+        cflags += [ "-msse3", ]
+        ldflags += [ "-msse3", ]
+      }
+      if (use_sse41) {
+        cflags += [ "-mssse3", "-msse4.1", ]
+        ldflags += [ "-mssse3", "-msse4.1", ]
+      }
+      if (use_sse42) {
+        cflags += [ "-msse4", "-msse4.2", ]
+        ldflags += [ "-msse4.2", ]
+      }
+    }
+  } else if (current_cpu == "x64") {
+    if (is_win) {
+      if (use_sse3) {
+        cflags += [ "/clang:-msse3", ]
+      }
+      if (use_sse41) {
+        cflags += [ "/clang:-mssse3", "/clang:-msse4.1", ]
+      }
+      if (use_sse42) {
+        cflags += [ "/clang:-msse4.2", ]
+      }
+      if (use_avx) {
+        cflags += [ "/clang:-mpclmul", "/clang:-maes", "/clang:-mavx", ]
+      }
+      if (use_fma) {
+        cflags += [ "/clang:-mfma", "/clang:-ffp-contract=fast", ]
+      }
+      if (use_avx2) {
+        cflags += [ "/clang:-mavx2", "/clang:-mf16c", "/clang:-mlzcnt", "/clang:-mbmi", "/clang:-mbmi2", ]
+        ldflags += [ "-mllvm:-march=haswell", ]
+      }
+      if (use_avx512) {
+        cflags += [ "/clang:-mavx512f", "/clang:-mavx512cd", "/clang:-mavx512vl", "/clang:-mavx512bw", "/clang:-mavx512dq", ]
+        ldflags += [ "-mllvm:-march=skylake-avx512", ]
+      }
+    } else if (is_mac) {
+      if (use_avx2) {
+        cflags += [ "-march=x86-64-v3", ]
+        ldflags += [ "-Wl,-mllvm,-march=x86-64-v3", ]
+      } else {
+        cflags += [ "-msse3", "-mssse3", "-msse4.1", ]
+      }
+    } else {
+      # Linux and ChromiumOS and Android
+      if (use_sse3) {
+        cflags += [ "-msse3", ]
+        ldflags += [ "-msse3", ]
+      }
+      if (use_sse41) {
+        cflags += [ "-mssse3", "-msse4.1", ]
+        ldflags += [ "-mssse3", "-msse4.1", ]
+      }
+      if (use_sse42) {
+        cflags += [ "-msse4", "-msse4.2", ]
+        ldflags += [ "-msse4.2", ]
+      }
+      if (use_avx) {
+        cflags += [ "-mpclmul", "-maes", "-mavx", ]
+        ldflags += [ "-mpclmul", "-maes", "-mavx", ]
+      }
+      if (use_fma) {
+        cflags += [ "-mfma", "-ffp-contract=fast", ]
+        ldflags += [ "-mfma", "-Wl,-mllvm,-fp-contract=fast", ]
+      }
+      if (use_avx2) {
+        cflags += [ "-mavx2", "-mf16c", "-mlzcnt", "-mbmi", "-mbmi2", ]
+        ldflags += [ "-mavx2", "-mf16c", "-mlzcnt", "-mbmi", "-mbmi2", "-Wl,-mllvm,-march=haswell", ]
+      }
+      if (use_avx512) {
+        cflags += [ "-mavx512f", "-mavx512cd", "-mavx512vl", "-mavx512bw", "-mavx512dq", ]
+        ldflags += [ "-mavx512f", "-mavx512cd", "-mavx512vl", "-mavx512bw", "-mavx512dq", "-Wl,-mllvm,-march=skylake-avx512", ]
+      }
+    }
+  } else if (current_cpu == "arm") {
+    if (is_android || is_linux) {
+    }
+  } else if (current_cpu == "arm64") {
+    if (is_win) {
+      cflags += [ "-march=armv8-a+simd", ]
+    } else if (is_mac) {
+      cflags += [ "-march=armv8.3-a+simd+crypto", "-mtune=apple-m1", ]
+      ldflags += [ "-march=armv8.3-a+simd+crypto", "-mtune=apple-m1", ]
+    } else {
+      # Linux and ChromiumOS and Android
+      cflags += [ "-march=armv8-a+simd", ]
+      if (is_raspi) {
+        cflags += [ "-mtune=cortex-a72", ]
+      }
+    }
+  }
+}
+'''
         with open(full_path, 'w', encoding='utf-8') as f:
             f.write(content)
 
