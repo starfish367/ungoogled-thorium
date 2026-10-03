@@ -226,7 +226,7 @@ is_chromeos_lacros = is_chromeos && chromeos_is_browser_only
         'build/config/nacl/config.gni': 'declare_args() {\n  enable_nacl = false\n}\n',
         'chrome/enterprise_companion/buildflags.gni': 'declare_args() {\n  enable_chrome_enterprise_companion = false\n}\n',
         'chromeos/ash/components/assistant/assistant.gni': 'declare_args() {\n  enable_cros_libassistant = false\n}\n',
-        'components/nacl/features.gni': 'declare_args() {\n  enable_nacl = false\n}\n',
+        'components/nacl/features.gni': 'import("//build/config/nacl/config.gni")\n',
         'ppapi/buildflags/buildflags.gni': '''declare_args() {
   enable_plugins = false
   enable_ppapi = false
