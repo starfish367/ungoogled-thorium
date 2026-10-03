@@ -183,7 +183,7 @@ def main():
     print("Applying Thorium overlay and patches...")
     # Preserve Chromium's original root build configs and scripts so declarations and toolchains aren't broken
     preserved_files = {}
-    for rel_path in ['BUILD.gn', 'build/vs_toolchain.py', 'build/config/BUILDCONFIG.gn', 'build/config/arm.gni', 'content/test/BUILD.gn', 'components/BUILD.gn', 'v8/BUILD.gn', 'content/shell/BUILD.gn']:
+    for rel_path in ['BUILD.gn', 'build/vs_toolchain.py', 'build/config/BUILDCONFIG.gn', 'build/config/arm.gni', 'content/test/BUILD.gn', 'components/BUILD.gn', 'v8/BUILD.gn', 'content/shell/BUILD.gn', 'media/media_options.gni']:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
             with open(full_path, 'r', encoding='utf-8') as f:
@@ -205,6 +205,9 @@ def main():
         elif rel_path == 'BUILD.gn':
             if 'group("thorium")' not in content:
                 content += '\n# Thorium target group\ngroup("thorium") {\n  public_deps = [ "//chrome" ]\n}\n'
+        elif rel_path == 'media/media_options.gni':
+            if 'enable_platform_vvc' not in content:
+                content += '\ndeclare_args() {\n  enable_platform_vvc = false\n}\n'
         with open(full_path, 'w', encoding='utf-8') as f:
             f.write(content)
 
@@ -274,11 +277,19 @@ buildflag_header("buildflags") {
             with open(stub_full, 'w', encoding='utf-8') as f:
                 f.write(stub_code)
 
-    # Ensure media/media_options.gni defines system_loopback_as_aec_reference_supported
+    # Ensure media/media_options.gni defines system_loopback_as_aec_reference_supported and enable_media_remoting_redirection
     media_options_path = os.path.join(src_dir, 'media', 'media_options.gni')
     if os.path.exists(media_options_path):
         with open(media_options_path, 'r', encoding='utf-8') as f:
             media_content = f.read()
+        changes = False
+        if 'enable_media_remoting_redirection' not in media_content:
+            media_content += '''
+declare_args() {
+  enable_media_remoting_redirection = enable_media_remoting_rpc && is_win
+}
+'''
+            changes = True
         if 'system_loopback_as_aec_reference_supported' not in media_content:
             media_content += '''
 declare_args() {
@@ -286,6 +297,15 @@ declare_args() {
       (is_win || is_mac) && chrome_wide_echo_cancellation_supported
 }
 '''
+            changes = True
+        if 'enable_platform_vvc' not in media_content:
+            media_content += '''
+declare_args() {
+  enable_platform_vvc = false
+}
+'''
+            changes = True
+        if changes:
             with open(media_options_path, 'w', encoding='utf-8') as f:
                 f.write(media_content)
 
