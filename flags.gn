@@ -18,3 +18,5 @@ use_unofficial_version_number=false
 v8_drumbrake_bounds_checks=true
 is_thorium_build=true
 enable_glic=false
+enable_webui_tab_strip=false
+enable_click_to_call=false

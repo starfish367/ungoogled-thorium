@@ -217,6 +217,8 @@ declare_args() {
   is_raspi = false
   is_chancie_wancie_build = false
   enable_glic = false
+  enable_webui_tab_strip = false
+  enable_click_to_call = false
 }
 '''
             if 'is_nacl = false' not in content:
@@ -241,6 +243,8 @@ is_thorium_build = true
 is_raspi = false
 is_chancie_wancie_build = false
 enable_glic = false
+enable_webui_tab_strip = false
+enable_click_to_call = false
 '''
             if 'thorium_simd_optimization' not in content:
                 content += '\n# Thorium SIMD optimization config\ndefault_compiler_configs += [ "//build/config/compiler:thorium_simd_optimization" ]\n'
