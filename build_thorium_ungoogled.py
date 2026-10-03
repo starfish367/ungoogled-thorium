@@ -227,8 +227,9 @@ is_chromeos_lacros = is_chromeos && chromeos_is_browser_only
         'chrome/enterprise_companion/buildflags.gni': 'declare_args() {\n  enable_chrome_enterprise_companion = false\n}\n',
         'chromeos/ash/components/assistant/assistant.gni': 'declare_args() {\n  enable_cros_libassistant = false\n}\n',
         'components/nacl/features.gni': 'import("//build/config/nacl/config.gni")\n',
-        'ppapi/buildflags/buildflags.gni': '''declare_args() {
-  enable_plugins = false
+        'ppapi/buildflags/buildflags.gni': '''import("//content/public/common/features.gni")
+
+declare_args() {
   enable_ppapi = false
 }
 ''',
@@ -253,10 +254,7 @@ buildflag_header("buildflags") {
 
 #endif  // PPAPI_BUILDFLAGS_BUILDFLAGS_H_
 ''',
-        'chrome/browser/request_header_integrity/buildflags.gni': '''declare_args() {
-  enable_request_header_integrity = false
-}
-''',
+        'chrome/browser/request_header_integrity/buildflags.gni': 'import("//chrome/common/request_header_integrity/buildflags.gni")\n',
         'components/sharing_message/buildflags.gni': '''declare_args() {
   enable_sharing_message = false
 }
