@@ -200,6 +200,8 @@ def main():
         if rel_path == 'build/config/BUILDCONFIG.gn':
             if 'enable_strict_deps' not in content:
                 content += '\ndeclare_args() {\n  enable_strict_deps = false\n  default_modulemap_mode = "none"\n}\n'
+            if 'is_nacl = false' not in content:
+                content += '\nis_nacl = false\nis_nacl_irt = false\nis_nacl_saigo = false\n'
             if 'thorium_simd_optimization' not in content:
                 content += '\n# Thorium SIMD optimization config\ndefault_compiler_configs += [ "//build/config/compiler:thorium_simd_optimization" ]\n'
         elif rel_path == 'BUILD.gn':
@@ -223,7 +225,13 @@ def main():
 is_chromeos_ash = is_chromeos && !chromeos_is_browser_only
 is_chromeos_lacros = is_chromeos && chromeos_is_browser_only
 ''',
-        'build/config/nacl/config.gni': 'declare_args() {\n  enable_nacl = false\n}\n',
+        'build/config/nacl/config.gni': '''declare_args() {
+  enable_nacl = false
+}
+is_nacl = false
+is_nacl_irt = false
+is_nacl_saigo = false
+''',
         'chrome/enterprise_companion/buildflags.gni': 'declare_args() {\n  enable_chrome_enterprise_companion = false\n}\n',
         'chromeos/ash/components/assistant/assistant.gni': 'declare_args() {\n  enable_cros_libassistant = false\n}\n',
         'components/nacl/features.gni': 'import("//build/config/nacl/config.gni")\n',
