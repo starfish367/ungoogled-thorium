@@ -199,7 +199,19 @@ def main():
         full_path = os.path.join(src_dir, rel_path)
         if rel_path == 'build/config/BUILDCONFIG.gn':
             if 'enable_strict_deps' not in content:
-                content += '\ndeclare_args() {\n  enable_strict_deps = false\n  default_modulemap_mode = "none"\n}\n'
+                content += '''
+declare_args() {
+  enable_strict_deps = false
+  default_modulemap_mode = "none"
+  llvm_android_mainline = false
+  llvm_force_head_revision = false
+  is_cronet_build = false
+  is_castos = false
+  lacros_use_chromium_toolchain = false
+  android_full_debug = false
+  is_high_end_android = false
+}
+'''
             if 'is_nacl = false' not in content:
                 content += '''
 is_nacl = false
@@ -208,6 +220,13 @@ is_nacl_saigo = false
 chromeos_is_browser_only = false
 is_chromeos_lacros = false
 is_chromeos_device = false
+llvm_android_mainline = false
+llvm_force_head_revision = false
+is_cronet_build = false
+is_castos = false
+lacros_use_chromium_toolchain = false
+android_full_debug = false
+is_high_end_android = false
 '''
             if 'thorium_simd_optimization' not in content:
                 content += '\n# Thorium SIMD optimization config\ndefault_compiler_configs += [ "//build/config/compiler:thorium_simd_optimization" ]\n'
@@ -337,6 +356,58 @@ declare_args() {
                 cros_code += '\nchromeos_is_browser_only = false\nis_chromeos_lacros = false\n'
                 with open(cros_full, 'w', encoding='utf-8') as f:
                     f.write(cros_code)
+
+    # Patch build/config/compiler/BUILD.gn to declare missing legacy/toolchain args
+    compiler_build_gn = os.path.join(src_dir, 'build', 'config', 'compiler', 'BUILD.gn')
+    if os.path.exists(compiler_build_gn):
+        with open(compiler_build_gn, 'r', encoding='utf-8') as f:
+            cbg_content = f.read()
+        if 'llvm_android_mainline' not in cbg_content or 'llvm_android_mainline = false' not in cbg_content:
+            cbg_stub = '''declare_args() {
+  llvm_android_mainline = false
+  llvm_force_head_revision = false
+  is_cronet_build = false
+  is_castos = false
+  lacros_use_chromium_toolchain = false
+  android_full_debug = false
+  is_high_end_android = false
+}
+
+'''
+            cbg_content = cbg_stub + cbg_content
+            with open(compiler_build_gn, 'w', encoding='utf-8') as f:
+                f.write(cbg_content)
+
+    # Ensure build/toolchain/toolchain.gni declares llvm_android_mainline & llvm_force_head_revision
+    toolchain_gni = os.path.join(src_dir, 'build', 'toolchain', 'toolchain.gni')
+    if os.path.exists(toolchain_gni):
+        with open(toolchain_gni, 'r', encoding='utf-8') as f:
+            tc_content = f.read()
+        if 'llvm_android_mainline' not in tc_content:
+            tc_content += '''
+declare_args() {
+  llvm_android_mainline = false
+  llvm_force_head_revision = false
+}
+'''
+            with open(toolchain_gni, 'w', encoding='utf-8') as f:
+                f.write(tc_content)
+
+    # Ensure build/config/clang/clang.gni and build/config/compiler/compiler.gni declare them as well
+    for gni_rel in ['build/config/clang/clang.gni', 'build/config/compiler/compiler.gni']:
+        gni_full = os.path.join(src_dir, gni_rel)
+        if os.path.exists(gni_full):
+            with open(gni_full, 'r', encoding='utf-8') as f:
+                gni_code = f.read()
+            if 'llvm_android_mainline' not in gni_code:
+                gni_code += '''
+declare_args() {
+  llvm_android_mainline = false
+  llvm_force_head_revision = false
+}
+'''
+                with open(gni_full, 'w', encoding='utf-8') as f:
+                    f.write(gni_code)
 
     if target_os == 'win':
         # Patch build/toolchain/win/setup_toolchain.py to detect installed Windows SDK
