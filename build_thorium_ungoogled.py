@@ -267,6 +267,10 @@ buildflag_header("buildflags") {
   enable_cros_libsegmentation = false
 }
 ''',
+        'build/toolchain/cros/cros_config.gni': '''declare_args() {
+  lacros_use_chromium_toolchain = false
+}
+''',
     }
     for stub_rel, stub_code in stubs.items():
         stub_full = os.path.join(src_dir, stub_rel)
