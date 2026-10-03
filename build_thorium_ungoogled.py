@@ -322,6 +322,15 @@ buildflag_header("buildflags") {
   lacros_use_chromium_toolchain = false
 }
 ''',
+        # Stub for relocated isolated_web_apps preload component in Chromium 154
+        'components/webapps/isolated_web_apps/preload/BUILD.gn': '''group("component") {
+  public_deps = [ "//chrome/browser/web_applications/isolated_web_apps/key_distribution/preload:component" ]
+}
+
+group("component_bundle") {
+  public_deps = [ "//chrome/browser/web_applications/isolated_web_apps/key_distribution/preload:component_bundle" ]
+}
+''',
     }
     for stub_rel, stub_code in stubs.items():
         stub_full = os.path.join(src_dir, stub_rel)
@@ -383,6 +392,23 @@ declare_args() {
             cbg = cbg.replace('if (use_explicit_libcxx_modules)', 'if (false)')
             with open(compiler_build_gn, 'w', encoding='utf-8') as f:
                 f.write(cbg)
+
+    # Patch chrome/BUILD.gn to point isolated_web_apps preload component to upstream location
+    chrome_build_gn = os.path.join(src_dir, 'chrome', 'BUILD.gn')
+    if os.path.exists(chrome_build_gn):
+        with open(chrome_build_gn, 'r', encoding='utf-8') as f:
+            ch_bg = f.read()
+        if '//components/webapps/isolated_web_apps/preload:component' in ch_bg:
+            ch_bg = ch_bg.replace(
+                '//components/webapps/isolated_web_apps/preload:component',
+                '//chrome/browser/web_applications/isolated_web_apps/key_distribution/preload:component'
+            )
+            ch_bg = ch_bg.replace(
+                '//components/webapps/isolated_web_apps/preload:component_bundle',
+                '//chrome/browser/web_applications/isolated_web_apps/key_distribution/preload:component_bundle'
+            )
+            with open(chrome_build_gn, 'w', encoding='utf-8') as f:
+                f.write(ch_bg)
 
     # Ensure legacy .gni files exist for Thorium overlay compatibility
     legacy_gni_files = {
