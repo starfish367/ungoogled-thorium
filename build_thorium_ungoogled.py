@@ -212,6 +212,7 @@ declare_args() {
   is_high_end_android = false
   use_libcxx_modules = false
   use_explicit_libcxx_modules = false
+  allow_runtime_configurable_key_storage = false
 }
 '''
             if 'is_nacl = false' not in content:
@@ -231,6 +232,7 @@ android_full_debug = false
 is_high_end_android = false
 use_libcxx_modules = false
 use_explicit_libcxx_modules = false
+allow_runtime_configurable_key_storage = false
 '''
             if 'thorium_simd_optimization' not in content:
                 content += '\n# Thorium SIMD optimization config\ndefault_compiler_configs += [ "//build/config/compiler:thorium_simd_optimization" ]\n'
@@ -370,6 +372,17 @@ declare_args() {
             cxx_code += '\nuse_libcxx_modules = false\nuse_explicit_libcxx_modules = false\n'
             with open(cxx_gni, 'w', encoding='utf-8') as f:
                 f.write(cxx_code)
+
+    # Ensure components/os_crypt/sync/features.gni exists for Thorium overlay compatibility
+    os_crypt_sync_dir = os.path.join(src_dir, 'components', 'os_crypt', 'sync')
+    os.makedirs(os_crypt_sync_dir, exist_ok=True)
+    os_crypt_sync_gni = os.path.join(os_crypt_sync_dir, 'features.gni')
+    if not os.path.exists(os_crypt_sync_gni):
+        with open(os_crypt_sync_gni, 'w', encoding='utf-8') as f:
+            f.write('''declare_args() {
+  allow_runtime_configurable_key_storage = false
+}
+''')
 
     # BUILDCONFIG.gn already declares global fallback args across the entire build tree
 
