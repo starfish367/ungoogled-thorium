@@ -267,6 +267,7 @@ buildflag_header("buildflags") {
   enable_cros_libsegmentation = false
 }
 ''',
+        # Stub for removed ChromeOS toolchain config in Chromium 154
         'build/toolchain/cros/cros_config.gni': '''declare_args() {
   lacros_use_chromium_toolchain = false
 }
