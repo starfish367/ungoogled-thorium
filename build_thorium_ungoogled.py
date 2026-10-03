@@ -219,6 +219,7 @@ declare_args() {
   enable_glic = false
   enable_webui_tab_strip = false
   enable_click_to_call = false
+  build_with_tflite_lib = false
 }
 '''
             if 'is_nacl = false' not in content:
@@ -245,6 +246,7 @@ is_chancie_wancie_build = false
 enable_glic = false
 enable_webui_tab_strip = false
 enable_click_to_call = false
+build_with_tflite_lib = false
 '''
             if 'thorium_simd_optimization' not in content:
                 content += '\n# Thorium SIMD optimization config\ndefault_compiler_configs += [ "//build/config/compiler:thorium_simd_optimization" ]\n'

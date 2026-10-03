@@ -20,3 +20,4 @@ is_thorium_build=true
 enable_glic=false
 enable_webui_tab_strip=false
 enable_click_to_call=false
+build_with_tflite_lib=false
