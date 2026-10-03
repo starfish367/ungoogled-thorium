@@ -216,17 +216,6 @@ declare_args() {
   is_thorium_build = true
   is_raspi = false
   is_chancie_wancie_build = false
-  enable_on_device_translation = false
-  enable_cros_libassistant = false
-  enable_fake_assistant_microphone = false
-  enable_assistant_integration_tests = false
-  enable_nacl = false
-  is_nacl_glibc = false
-  enable_plugins = true
-  enable_ppapi = false
-  enable_video_effects = false
-  enable_enterprise_companion = false
-  enable_rust_mojo = false
 }
 '''
             if 'is_nacl = false' not in content:
@@ -234,7 +223,6 @@ declare_args() {
 is_nacl = false
 is_nacl_irt = false
 is_nacl_saigo = false
-is_nacl_glibc = false
 chromeos_is_browser_only = false
 is_chromeos_lacros = false
 is_chromeos_device = false
@@ -251,16 +239,6 @@ allow_runtime_configurable_key_storage = false
 is_thorium_build = true
 is_raspi = false
 is_chancie_wancie_build = false
-enable_on_device_translation = false
-enable_cros_libassistant = false
-enable_fake_assistant_microphone = false
-enable_assistant_integration_tests = false
-enable_nacl = false
-enable_plugins = true
-enable_ppapi = false
-enable_video_effects = false
-enable_enterprise_companion = false
-enable_rust_mojo = false
 '''
             if 'thorium_simd_optimization' not in content:
                 content += '\n# Thorium SIMD optimization config\ndefault_compiler_configs += [ "//build/config/compiler:thorium_simd_optimization" ]\n'
@@ -407,9 +385,7 @@ declare_args() {
   allow_runtime_configurable_key_storage = false
 }
 ''',
-        'components/services/on_device_translation/buildflags/features.gni': '''declare_args() {
-  enable_on_device_translation = false
-}
+        'components/services/on_device_translation/buildflags/features.gni': '''import("//components/on_device_translation/buildflags/features.gni")
 ''',
         'chromeos/ash/components/assistant/assistant.gni': '''declare_args() {
   enable_cros_libassistant = false
@@ -435,9 +411,7 @@ declare_args() {
   enable_video_effects = false
 }
 ''',
-        'chrome/enterprise_companion/buildflags.gni': '''declare_args() {
-  enable_enterprise_companion = false
-}
+        'chrome/enterprise_companion/buildflags.gni': '''import("//chrome/enterprise_companion/config.gni")
 ''',
         'mojo/public/rust/rust.gni': '''declare_args() {
   enable_rust_mojo = false
