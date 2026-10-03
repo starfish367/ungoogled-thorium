@@ -216,6 +216,17 @@ declare_args() {
   is_thorium_build = true
   is_raspi = false
   is_chancie_wancie_build = false
+  enable_on_device_translation = false
+  enable_cros_libassistant = false
+  enable_fake_assistant_microphone = false
+  enable_assistant_integration_tests = false
+  enable_nacl = false
+  is_nacl_glibc = false
+  enable_plugins = true
+  enable_ppapi = false
+  enable_video_effects = false
+  enable_enterprise_companion = false
+  enable_rust_mojo = false
 }
 '''
             if 'is_nacl = false' not in content:
@@ -223,6 +234,7 @@ declare_args() {
 is_nacl = false
 is_nacl_irt = false
 is_nacl_saigo = false
+is_nacl_glibc = false
 chromeos_is_browser_only = false
 is_chromeos_lacros = false
 is_chromeos_device = false
@@ -239,6 +251,16 @@ allow_runtime_configurable_key_storage = false
 is_thorium_build = true
 is_raspi = false
 is_chancie_wancie_build = false
+enable_on_device_translation = false
+enable_cros_libassistant = false
+enable_fake_assistant_microphone = false
+enable_assistant_integration_tests = false
+enable_nacl = false
+enable_plugins = true
+enable_ppapi = false
+enable_video_effects = false
+enable_enterprise_companion = false
+enable_rust_mojo = false
 '''
             if 'thorium_simd_optimization' not in content:
                 content += '\n# Thorium SIMD optimization config\ndefault_compiler_configs += [ "//build/config/compiler:thorium_simd_optimization" ]\n'
@@ -379,16 +401,56 @@ declare_args() {
             with open(cxx_gni, 'w', encoding='utf-8') as f:
                 f.write(cxx_code)
 
-    # Ensure components/os_crypt/sync/features.gni exists for Thorium overlay compatibility
-    os_crypt_sync_dir = os.path.join(src_dir, 'components', 'os_crypt', 'sync')
-    os.makedirs(os_crypt_sync_dir, exist_ok=True)
-    os_crypt_sync_gni = os.path.join(os_crypt_sync_dir, 'features.gni')
-    if not os.path.exists(os_crypt_sync_gni):
-        with open(os_crypt_sync_gni, 'w', encoding='utf-8') as f:
-            f.write('''declare_args() {
+    # Ensure legacy .gni files exist for Thorium overlay compatibility
+    legacy_gni_files = {
+        'components/os_crypt/sync/features.gni': '''declare_args() {
   allow_runtime_configurable_key_storage = false
 }
-''')
+''',
+        'components/services/on_device_translation/buildflags/features.gni': '''declare_args() {
+  enable_on_device_translation = false
+}
+''',
+        'chromeos/ash/components/assistant/assistant.gni': '''declare_args() {
+  enable_cros_libassistant = false
+  enable_fake_assistant_microphone = false
+  enable_assistant_integration_tests = false
+}
+''',
+        'components/nacl/features.gni': '''declare_args() {
+  enable_nacl = false
+}
+''',
+        'build/config/nacl/config.gni': '''declare_args() {
+  is_nacl_glibc = false
+  is_nacl_saigo = false
+}
+''',
+        'ppapi/buildflags/buildflags.gni': '''declare_args() {
+  enable_plugins = true
+  enable_ppapi = false
+}
+''',
+        'services/video_effects/args.gni': '''declare_args() {
+  enable_video_effects = false
+}
+''',
+        'chrome/enterprise_companion/buildflags.gni': '''declare_args() {
+  enable_enterprise_companion = false
+}
+''',
+        'mojo/public/rust/rust.gni': '''declare_args() {
+  enable_rust_mojo = false
+}
+'''
+    }
+
+    for rel_gni, gni_content in legacy_gni_files.items():
+        full_gni = os.path.join(src_dir, rel_gni)
+        if not os.path.exists(full_gni):
+            os.makedirs(os.path.dirname(full_gni), exist_ok=True)
+            with open(full_gni, 'w', encoding='utf-8') as f:
+                f.write(gni_content)
 
     # BUILDCONFIG.gn already declares global fallback args across the entire build tree
 
