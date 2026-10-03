@@ -1,186 +1,94 @@
-# ungoogled-chromium
+# ⚡ Ungoogled-Thorium
 
-*A lightweight approach to removing Google web service dependency*
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Alex313031/Thorium/main/logos/thorium_logo.png" alt="Ungoogled-Thorium Logo" width="128" height="128" />
+</p>
 
-**Help is welcome!** See the [docs/contributing.md](docs/contributing.md) document for more information.
+<p align="center">
+  <strong>The fastest Chromium browser meets complete privacy & freedom.</strong>
+</p>
 
-## Objectives
+<p align="center">
+  <a href="https://github.com/starfish367/ungoogled-thorium/actions/workflows/thorium_ungoogled.yml"><img src="https://github.com/starfish367/ungoogled-thorium/actions/workflows/thorium_ungoogled.yml/badge.svg" alt="Build Status" /></a>
+  <img src="https://img.shields.io/badge/Platform-Linux%20ARM64%20%7C%20Windows%20x64-blue.svg" alt="Platform" />
+  <img src="https://img.shields.io/badge/License-BSD--3--Clause-green.svg" alt="License" />
+  <img src="https://img.shields.io/badge/Hardware-Optimized%20for%20S905X%20%2F%20ARM64-orange.svg" alt="Optimized" />
+</p>
 
-In descending order of significance (i.e. most important objective first):
+---
 
-1. **ungoogled-chromium is Google Chromium, sans dependency on Google web services**.
-2. **ungoogled-chromium retains the default Chromium experience as closely as possible**. Unlike other Chromium forks that have their own visions of a web browser, ungoogled-chromium is essentially a drop-in replacement for Chromium.
-3. **ungoogled-chromium features tweaks to enhance privacy, control, and transparency**. However, almost all of these features must be manually activated or enabled. For more details, see [Feature Overview](#feature-overview).
+## 📖 Giới Thiệu (Overview)
 
-In scenarios where the objectives conflict, the objective of higher significance should take precedence.
+**Ungoogled-Thorium** là sự kết hợp hoàn hảo giữa hai dự án mã nguồn mở đình đám:
+1. **[Thorium Browser](https://github.com/Alex313031/Thorium)**: Bản fork Chromium được tối ưu hóa tối đa về hiệu năng với các cờ biên dịch tối tân (SIMD, AVX/AVX2, Polly, tối ưu render engine và multimedia).
+2. **[Ungoogled-Chromium](https://github.com/ungoogled-software/ungoogled-chromium)**: Triệt tiêu 100% các kết nối ngầm, dịch vụ theo dõi, tài khoản và telemetry của Google.
 
-## Content Overview
+Mục tiêu chính của dự án là mang lại trải nghiệm duyệt web **nhanh nhất, mượt nhất nhưng hoàn toàn riêng tư**, đặc biệt tối ưu cho các thiết bị cấu hình nhẹ như **TV Box Amlogic S905X (Armbian Linux ARM64)** và máy tính cá nhân (Windows x64).
 
-* [Objectives](#objectives)
-* [Motivation and Philosophy](#motivation-and-philosophy)
-* [Feature Overview](#feature-overview)
-* [**Downloads**](#downloads)
-* [Source Code](#source-code)
-* [**FAQ**](#faq)
-* [Building Instructions](#building-instructions)
-* [Design Documentation](#design-documentation)
-* [**Contributing, Reporting, Contacting**](#contributing-reporting-contacting)
-* [Credits](#credits)
-* [Related Projects](#related-projects)
-* [License](#license)
+---
 
-## Motivation and Philosophy
+## ✨ Điểm Nổi Bật (Key Features)
 
-Without signing in to a Google Account, Chromium does pretty well in terms of security and privacy. However, Chromium still has some dependency on Google web services and binaries. In addition, Google designed Chromium to be easy and intuitive for users, which means they compromise on transparency and control of internal operations.
+### 🚀 Tốc Độ & Tối Ưu Phần Cứng (Thorium Performance)
+* **Tối ưu hóa tập lệnh SIMD:** Tận dụng tối đa tập lệnh CPU trên cả x86_64 và ARM64 (NEON).
+* **Giải mã phần cứng mượt mà:** Ép chuẩn video H.264 (`avc1`) tương thích hoàn hảo với phần cứng VPU Mali-450 / S905X, tránh giật lag 100% CPU do VP9/AV1.
+* **Hỗ trợ Widevine CDM:** Thưởng thức nội dung đa phương tiện chất lượng cao có bản quyền DRM.
+* **Gọn nhẹ cho RAM 1-2GB:** Cơ chế đóng băng tab nền thông minh, tránh tối đa tràn RAM trên thiết bị nhúng.
 
-ungoogled-chromium addresses these issues in the following ways:
+### 🛡️ Riêng Tư Tuyệt Đối (Ungoogled Privacy)
+* **Không dịch vụ Google:** Gỡ bỏ Google Sync, Safe Browsing telemetry, Google Host Detector, WebRTC IP leakage.
+* **Domain Substitution:** Thay thế các domain theo dõi của Google bằng tên miền giả lập không thể kết nối (`qjz9zk`).
+* **Pruned Binaries:** Loại bỏ toàn bộ binary blob đóng của Google khỏi mã nguồn biên dịch.
 
-1. Remove all remaining background requests to any web services while building and running the browser
-2. Remove all code specific to Google web services
-3. Remove all uses of pre-made binaries from the source code, and replace them with user-provided alternatives when possible.
-4. Disable features that inhibit control and transparency, and add or modify features that promote them (these changes will almost always require manual activation or enabling).
+### 🤖 CI/CD Tự Động Hóa (GitHub Actions)
+* Tự động build và đóng gói định dạng **`.AppImage`** cho Linux ARM64.
+* Tự động build file cài đặt **`mini_installer.exe`** cho Windows x64.
+* Sử dụng bộ nhớ đệm `sccache` và tối ưu dung lượng đĩa giúp quá trình build thông suốt.
 
-These features are implemented as configuration flags, patches, and custom scripts. For more details, consult the [Design Documentation](docs/design.md).
+---
 
-## Feature Overview
+## 📦 Tải Về & Cài Đặt (Downloads)
 
-*This section overviews the features of ungoogled-chromium. For more detailed information, it is best to consult the source code.*
+Các bản dựng mới nhất được tạo tự động tại mục **[Releases](https://github.com/starfish367/ungoogled-thorium/releases)** hoặc tab **[Actions Artifacts](https://github.com/starfish367/ungoogled-thorium/actions)**.
 
-Contents of this section:
+### 1. Linux ARM64 (Armbian / Raspberry Pi / TV Box)
+Tải file `Thorium-Ungoogled-Linux-arm64.AppImage`, cấp quyền thực thi và chạy:
+```bash
+chmod +x Thorium-Ungoogled-Linux-arm64.AppImage
+./Thorium-Ungoogled-Linux-arm64.AppImage
+```
 
-* [Key Features](#key-features)
-* [Enhancing Features](#enhancing-features)
-* [Borrowed Features](#borrowed-features)
-* [Supported Platforms and Distributions](#supported-platforms-and-distributions)
+### 2. Windows x64
+Tải file `mini_installer.exe` và chạy trực tiếp để cài đặt.
 
-### Key Features
+---
 
-*These are the core features introduced by ungoogled-chromium.*
+## 🛠️ Hướng Dẫn Tự Biên Dịch (Building from Source)
 
-* Disable functionality specific to Google domains (e.g. Google Host Detector, Google URL Tracker, Google Cloud Messaging, Google Hotwording, etc.)
-    * This includes disabling [Safe Browsing](https://en.wikipedia.org/wiki/Google_Safe_Browsing). Consult [the FAQ for the rationale](https://ungoogled-software.github.io/ungoogled-chromium-wiki/faq#why-is-safe-browsing-disabled).
-* Block internal requests to Google at runtime. This feature is a fail-safe measure for the above, in case Google changes or introduces new components that our patches do not disable. This feature is implemented by replacing many Google web domains in the source code with non-existent alternatives ending in `qjz9zk` (known as domain substitution; [see docs/design.md](docs/design.md#source-file-processors) for details), then [modifying Chromium to block its own requests with such domains](patches/core/ungoogled-chromium/block-trk-and-subdomains.patch). In other words, no connections are attempted to the `qjz9zk` domain.
-* Strip binaries from the source code (known as binary pruning; [see docs/design.md](docs/design.md#source-file-processors) for details)
+Dự án hỗ trợ biên dịch trực tiếp trên máy hoặc thông qua **GitHub Actions Workflow**:
 
-### Enhancing Features
+### Kích hoạt qua GitHub Actions:
+1. Vào tab **Actions** -> Chọn workflow **Build Thorium + Ungoogled**.
+2. Bấm **Run workflow**, chọn target mong muốn (`linux-arm64`, `windows-x64`, hoặc `all`).
+3. Chờ workflow hoàn tất và tải về artifact ở cuối trang.
 
-*These are the non-essential features introduced by ungoogled-chromium.*
+### Biên dịch thủ công (CLI):
+```bash
+# Cài đặt môi trường Python 3.11+
+python build_thorium_ungoogled.py --target-os linux --target-cpu arm64 --src-dir src
+```
 
-* Add many new command-line switches and `chrome://flags` entries to configure new features (which are disabled by default). See [docs/flags.md](docs/flags.md) for the exhaustive list.
-* Add *Suggestions URL* text field in the search engine editor (`chrome://settings/searchEngines`) for customizing search engine suggestions.
-* Add more URL schemes allowed to save page schemes.
-* Add Omnibox search provider "No Search" to allow disabling of searching
-* Add a custom cross-platform build configuration and packaging wrapper for Chromium. It currently supports many Linux distributions, macOS, and Windows. (See [docs/design.md](docs/design.md) for details on the system.)
-* Force all pop-ups into tabs
-* Disable automatic formatting of URLs in Omnibox (e.g. stripping `http://`, hiding certain parameters)
-* Disable intranet redirect detector (extraneous DNS requests)
-    * This breaks captive portal detection, but captive portals still work.
-* (Iridium Browser feature change) Prevent URLs with the `trk:` scheme from connecting to the Internet
-    * Also prevents any URLs with the top-level domain `qjz9zk` (as used in domain substitution) from attempting a connection.
-* (Windows-specific) Do not set the Zone Identifier on downloaded files
+---
 
-### Borrowed Features
+## 🤝 Đóng Góp & Lời Cảm Ơn (Credits)
 
-In addition to the features introduced by ungoogled-chromium, ungoogled-chromium selectively borrows many features from the following projects (in approximate order of significance):
+Dự án xin chân thành gửi lời cảm ơn đến:
+* **[Alex313031](https://github.com/Alex313031)** cùng đội ngũ phát triển **Thorium Browser**.
+* Đội ngũ phát triển **[Ungoogled-Chromium](https://github.com/ungoogled-software/ungoogled-chromium)**.
+* **The Chromium Project**.
 
-* [Inox patchset](https://github.com/gcarq/inox-patchset)
-* [Bromite](https://github.com/bromite/bromite)
-* [Debian](https://tracker.debian.org/pkg/chromium)
-* [Iridium Browser](https://iridiumbrowser.de/)
+---
 
-### Supported Platforms and Distributions
+## 📄 Bản Quyền (License)
 
-[See docs/platforms.md for a list of supported platforms](docs/platforms.md).
-
-Other platforms are discussed and tracked in this repository's Issue Tracker. Learn more about using the Issue Tracker under the section [Contributing, Reporting, Contacting](#contributing-reporting-contacting).
-
-## Downloads
-
-### Automated or maintained builds
-
-ungoogled-chromium is available in the following **software repositories**:
-
-* Arch: Available in the AUR, [see instructions in ungoogled-chromium-archlinux](https://github.com/ungoogled-software/ungoogled-chromium-archlinux)
-* Debian: Available in OBS, find your [distribution specific instructions](https://github.com/ungoogled-software/ungoogled-chromium-debian) in the Installing section
-* Ubuntu: Available in the [XtraDeb PPA](https://xtradeb.net/) as [ungoogled-chromium](https://xtradeb.net/apps/ungoogled-chromium/).
-* Fedora: Available in [COPR](https://copr.fedorainfracloud.org/coprs/) as [`wojnilowicz/ungoogled-chromium`](https://copr.fedorainfracloud.org/coprs/wojnilowicz/ungoogled-chromium/). Also available in [RPM Fusion](https://rpmfusion.org/Configuration) as `chromium-browser-privacy` (outdated).
-* Gentoo: Available in [`::pf4public`](https://github.com/PF4Public/gentoo-overlay) overlay as [`ungoogled-chromium`](https://github.com/PF4Public/gentoo-overlay/tree/master/www-client/ungoogled-chromium) and [`ungoogled-chromium-bin`](https://github.com/PF4Public/gentoo-overlay/tree/master/www-client/ungoogled-chromium-bin) ebuilds
-* [OpenMandriva](https://openmandriva.org/) includes ungoogled-chromium as its main browser. The `chromium` package includes all ungoogling patches.
-* macOS: Available in [Homebrew](https://brew.sh/) as [`ungoogled-chromium`](https://formulae.brew.sh/cask/ungoogled-chromium). Just run `brew install --cask ungoogled-chromium`. Chromium will appear in your `/Applications` directory.
-* FreeBSD: Available in pkg as [`www/ungoogled-chromium`](https://www.freshports.org/www/ungoogled-chromium/).
-* OpenBSD: Available in ports as [`www/ungoogled-chromium`](https://github.com/openbsd/ports/tree/master/www/ungoogled-chromium).
-* [openSUSE](https://www.opensuse.org/): Available as [`ungoogled-chromium`](https://software.opensuse.org//download.html?project=network%3Achromium&package=ungoogled-chromium). 
-
-If your GNU/Linux distribution is not listed, there are distro-independent builds available via the following **package managers**:
-
-* Flatpak: Available [in the Flathub repo](https://flathub.org/apps/details/io.github.ungoogled_software.ungoogled_chromium) as `io.github.ungoogled_software.ungoogled_chromium`
-* GNU Guix: Available as `ungoogled-chromium`
-* NixOS/nixpkgs: Available as `ungoogled-chromium`
-
-### Third-party binaries
-
-If your operating system is not listed above, you can also try to [**Download binaries from here**](https://ungoogled-software.github.io/ungoogled-chromium-binaries/)
-
-*NOTE: These binaries are provided by anyone who are willing to build and submit them. Because these binaries are not necessarily [reproducible](https://reproducible-builds.org/), authenticity cannot be guaranteed; In other words, there is always a non-zero probability that these binaries may have been tampered with. In the unlikely event that this has happened to you, please [report it in a new issue](#contributing-reporting-contacting).*
-
-These binaries are known as **contributor binaries**.
-
-## Source Code
-
-This repository only contains the common code for all platforms; it does not contain all the configuration and scripts necessary to build ungoogled-chromium. Most users will want to use platform-specific repos, where all the remaining configuration and scripts are provided for specific platforms:
-
-[**Find the repo for a specific platform here**](docs/platforms.md).
-
-If you wish to include ungoogled-chromium code in your own build process, consider using [the tags in this repo](https://github.com/ungoogled-software/ungoogled-chromium/tags). These tags follow the format `{chromium_version}-{revision}` where
-
-* `chromium_version` is the version of Chromium used in `x.x.x.x` format, and
-* `revision` is a number indicating the version of ungoogled-chromium for the corresponding Chromium version.
-
-Additionally, most platform-specific repos extend their tag scheme upon this one.
-
-**Building the source code**: [See docs/building.md](docs/building.md)
-
-### Mirrors
-
-List of mirrors:
-
-* [Codeberg](https://codeberg.org): [main repo](https://codeberg.org/ungoogled-software/ungoogled-chromium) and [ungoogled-software](https://codeberg.org/ungoogled-software)
-
-## FAQ
-
-[See the frequently-asked questions (FAQ) on the Wiki](https://ungoogled-software.github.io/ungoogled-chromium-wiki/faq)
-
-## Building Instructions
-
-[See docs/building.md](docs/building.md)
-
-## Design Documentation
-
-[See docs/design.md](docs/design.md)
-
-## Contributing, Reporting, Contacting
-
-* For reporting and contacting, see [SUPPORT.md](SUPPORT.md)
-* If you're willing to help, check out the [Issue Tracker](https://github.com/ungoogled-software/ungoogled-chromium/issues) and especially issues, which [need help](https://github.com/ungoogled-software/ungoogled-chromium/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)
-* For contributing (e.g. how to help, submitting changes, criteria for new features), see [docs/contributing.md](docs/contributing.md)
-* If you have some small contributions that don't fit our criteria, consider adding them to [ungoogled-software/contrib](https://github.com/ungoogled-software/contrib) or [our Wiki](https://github.com/ungoogled-software/ungoogled-chromium-wiki) instead.
-
-## Credits
-
-* [The Chromium Project](https://www.chromium.org/)
-* [Inox patchset](https://github.com/gcarq/inox-patchset)
-* [Debian](https://tracker.debian.org/pkg/chromium-browser)
-* [Bromite](https://github.com/bromite/bromite)
-* [Iridium Browser](https://iridiumbrowser.de/)
-* The users for testing and debugging, [contributing code](https://github.com/ungoogled-software/ungoogled-chromium/graphs/contributors), providing feedback, or simply using ungoogled-chromium in some capacity.
-
-## Related Projects
-
-List of known projects that fork or use changes from ungoogled-chromium:
-
-* [Bromite](https://github.com/bromite/bromite) (Borrows some patches. Features builds for Android)
-* [ppc64le fork](https://github.com/leo-lb/ungoogled-chromium) (Fork with changes to build for ppc64le CPUs)
-
-## License
-
-BSD-3-clause. See [LICENSE](LICENSE)
+Dự án được phân phối dưới giấy phép **[BSD 3-Clause License](LICENSE)**.
