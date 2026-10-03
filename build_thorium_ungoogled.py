@@ -210,6 +210,8 @@ declare_args() {
   lacros_use_chromium_toolchain = false
   android_full_debug = false
   is_high_end_android = false
+  use_libcxx_modules = false
+  use_explicit_libcxx_modules = false
 }
 '''
             if 'is_nacl = false' not in content:
@@ -227,6 +229,8 @@ is_castos = false
 lacros_use_chromium_toolchain = false
 android_full_debug = false
 is_high_end_android = false
+use_libcxx_modules = false
+use_explicit_libcxx_modules = false
 '''
             if 'thorium_simd_optimization' not in content:
                 content += '\n# Thorium SIMD optimization config\ndefault_compiler_configs += [ "//build/config/compiler:thorium_simd_optimization" ]\n'
@@ -356,6 +360,16 @@ declare_args() {
                 cros_code += '\nchromeos_is_browser_only = false\nis_chromeos_lacros = false\n'
                 with open(cros_full, 'w', encoding='utf-8') as f:
                     f.write(cros_code)
+
+    # Ensure build/config/c++/c++.gni defines use_libcxx_modules
+    cxx_gni = os.path.join(src_dir, 'build', 'config', 'c++', 'c++.gni')
+    if os.path.exists(cxx_gni):
+        with open(cxx_gni, 'r', encoding='utf-8') as f:
+            cxx_code = f.read()
+        if 'use_libcxx_modules' not in cxx_code:
+            cxx_code += '\nuse_libcxx_modules = false\nuse_explicit_libcxx_modules = false\n'
+            with open(cxx_gni, 'w', encoding='utf-8') as f:
+                f.write(cxx_code)
 
     # BUILDCONFIG.gn already declares global fallback args across the entire build tree
 
