@@ -201,7 +201,14 @@ def main():
             if 'enable_strict_deps' not in content:
                 content += '\ndeclare_args() {\n  enable_strict_deps = false\n  default_modulemap_mode = "none"\n}\n'
             if 'is_nacl = false' not in content:
-                content += '\nis_nacl = false\nis_nacl_irt = false\nis_nacl_saigo = false\n'
+                content += '''
+is_nacl = false
+is_nacl_irt = false
+is_nacl_saigo = false
+chromeos_is_browser_only = false
+is_chromeos_lacros = false
+is_chromeos_device = false
+'''
             if 'thorium_simd_optimization' not in content:
                 content += '\n# Thorium SIMD optimization config\ndefault_compiler_configs += [ "//build/config/compiler:thorium_simd_optimization" ]\n'
         elif rel_path == 'BUILD.gn':
@@ -319,6 +326,17 @@ declare_args() {
         if changes:
             with open(media_options_path, 'w', encoding='utf-8') as f:
                 f.write(media_content)
+
+    # Ensure chromeos_is_browser_only is defined in chromeos ui_mode.gni and args.gni if they exist
+    for rel_cros in ['build/config/chromeos/ui_mode.gni', 'build/config/chromeos/args.gni']:
+        cros_full = os.path.join(src_dir, rel_cros)
+        if os.path.exists(cros_full):
+            with open(cros_full, 'r', encoding='utf-8') as f:
+                cros_code = f.read()
+            if 'chromeos_is_browser_only' not in cros_code:
+                cros_code += '\nchromeos_is_browser_only = false\nis_chromeos_lacros = false\n'
+                with open(cros_full, 'w', encoding='utf-8') as f:
+                    f.write(cros_code)
 
     if target_os == 'win':
         # Patch build/toolchain/win/setup_toolchain.py to detect installed Windows SDK
