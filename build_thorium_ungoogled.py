@@ -210,6 +210,8 @@ def main():
         'ash/webui/sample_system_web_app_ui/mojom/BUILD.gn',
         'ash/webui/sample_system_web_app_ui/resources/trusted/BUILD.gn',
         'ash/webui/sample_system_web_app_ui/resources/untrusted/BUILD.gn',
+        'chrome/installer/linux/BUILD.gn',
+        'third_party/widevine/cdm/BUILD.gn',
         'media/media_options.gni',
     ]:
         full_path = os.path.join(src_dir, rel_path)
@@ -288,6 +290,8 @@ build_with_tflite_lib = false
             content = content.replace('"$root_out_dir/chrome.exe"', '"$root_out_dir/thorium.exe"')
             content = content.replace('"$root_out_dir/chrome.exe.pdb"', '"$root_out_dir/thorium.exe.pdb"')
             content = content.replace('binary = "$root_out_dir/chrome"', 'binary = "$root_out_dir/thorium"')
+        elif rel_path == 'chrome/installer/linux/BUILD.gn':
+            content = content.replace('"$root_out_dir/chrome"', '"$root_out_dir/thorium"')
         elif rel_path == 'chrome/browser/BUILD.gn':
             if 'thorium_flag_choices.h' not in content and '"about_flags.cc",' in content:
                 content = content.replace(
