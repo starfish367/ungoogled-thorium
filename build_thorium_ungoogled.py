@@ -183,7 +183,7 @@ def main():
     print("Applying Thorium overlay and patches...")
     # Preserve Chromium's original root build configs and scripts so declarations and toolchains aren't broken
     preserved_files = {}
-    for rel_path in ['BUILD.gn', 'build/vs_toolchain.py', 'build/config/BUILDCONFIG.gn', 'build/config/arm.gni', 'content/test/BUILD.gn']:
+    for rel_path in ['BUILD.gn', 'build/vs_toolchain.py', 'build/config/BUILDCONFIG.gn', 'build/config/arm.gni', 'content/test/BUILD.gn', 'components/BUILD.gn']:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
             with open(full_path, 'r', encoding='utf-8') as f:
@@ -208,12 +208,9 @@ def main():
         with open(full_path, 'w', encoding='utf-8') as f:
             f.write(content)
 
-    # Ensure build/config/chromeos/ui_mode.gni exists as a compatibility stub
-    ui_mode_gni = os.path.join(src_dir, 'build', 'config', 'chromeos', 'ui_mode.gni')
-    if not os.path.exists(ui_mode_gni):
-        os.makedirs(os.path.dirname(ui_mode_gni), exist_ok=True)
-        with open(ui_mode_gni, 'w', encoding='utf-8') as f:
-            f.write('''declare_args() {
+    # Ensure missing compatibility stubs exist for Chromium 154
+    stubs = {
+        'build/config/chromeos/ui_mode.gni': '''declare_args() {
   chromeos_is_browser_only = false
   also_build_ash_chrome = false
   also_build_lacros_chrome = false
@@ -222,7 +219,18 @@ def main():
 
 is_chromeos_ash = is_chromeos && !chromeos_is_browser_only
 is_chromeos_lacros = is_chromeos && chromeos_is_browser_only
-''')
+''',
+        'build/config/nacl/config.gni': 'declare_args() {\n  enable_nacl = false\n}\n',
+        'chrome/enterprise_companion/buildflags.gni': 'declare_args() {\n  enable_chrome_enterprise_companion = false\n}\n',
+        'chromeos/ash/components/assistant/assistant.gni': 'declare_args() {\n  enable_cros_libassistant = false\n}\n',
+        'components/nacl/features.gni': 'declare_args() {\n  enable_nacl = false\n}\n',
+    }
+    for stub_rel, stub_code in stubs.items():
+        stub_full = os.path.join(src_dir, stub_rel)
+        if not os.path.exists(stub_full):
+            os.makedirs(os.path.dirname(stub_full), exist_ok=True)
+            with open(stub_full, 'w', encoding='utf-8') as f:
+                f.write(stub_code)
 
     # Ensure media/media_options.gni defines system_loopback_as_aec_reference_supported
     media_options_path = os.path.join(src_dir, 'media', 'media_options.gni')
