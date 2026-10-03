@@ -202,7 +202,14 @@ def main():
         'build/config/mac/BUILD.gn',
         'build/config/win/BUILD.gn',
         'build/config/compiler/BUILD.gn',
+        'ui/views/examples/BUILD.gn',
         'ui/webui/resources/images/BUILD.gn',
+        'content/shell/android/BUILD.gn',
+        'chrome/android/BUILD.gn',
+        'ash/webui/sample_system_web_app_ui/BUILD.gn',
+        'ash/webui/sample_system_web_app_ui/mojom/BUILD.gn',
+        'ash/webui/sample_system_web_app_ui/resources/trusted/BUILD.gn',
+        'ash/webui/sample_system_web_app_ui/resources/untrusted/BUILD.gn',
         'media/media_options.gni',
     ]:
         full_path = os.path.join(src_dir, rel_path)
@@ -596,6 +603,20 @@ declare_args() {
             )
             with open(chrome_build_gn, 'w', encoding='utf-8') as f:
                 f.write(ch_bg)
+
+    # Patch ui/native_theme/BUILD.gn to forward native_theme_browser to native_theme
+    native_theme_build_gn = os.path.join(src_dir, 'ui', 'native_theme', 'BUILD.gn')
+    if os.path.exists(native_theme_build_gn):
+        with open(native_theme_build_gn, 'r', encoding='utf-8') as f:
+            nt_content = f.read()
+        if 'group("native_theme_browser")' not in nt_content:
+            nt_content += '''
+group("native_theme_browser") {
+  public_deps = [ ":native_theme" ]
+}
+'''
+            with open(native_theme_build_gn, 'w', encoding='utf-8') as f:
+                f.write(nt_content)
 
     # Ensure legacy .gni files exist for Thorium overlay compatibility
     legacy_gni_files = {
