@@ -1,11 +1,12 @@
 # ⚡ Ungoogled-Thorium
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Alex313031/Thorium/main/logos/thorium_logo.png" alt="Ungoogled-Thorium Logo" width="128" height="128" />
+  <img src="assets/logo.svg" alt="Ungoogled-Thorium Logo" width="136" height="136" />
 </p>
 
 <p align="center">
-  <strong>The fastest Chromium browser meets complete privacy & freedom.</strong>
+  <strong>The fastest Chromium fork meets absolute privacy and freedom.</strong><br/>
+  <em>Bản fork Chromium nhanh nhất kết hợp cùng sự tự do và riêng tư tuyệt đối.</em>
 </p>
 
 <p align="center">
@@ -15,80 +16,91 @@
   <img src="https://img.shields.io/badge/Hardware-Optimized%20for%20S905X%20%2F%20ARM64-orange.svg" alt="Optimized" />
 </p>
 
----
-
-## 📖 Giới Thiệu (Overview)
-
-**Ungoogled-Thorium** là sự kết hợp hoàn hảo giữa hai dự án mã nguồn mở đình đám:
-1. **[Thorium Browser](https://github.com/Alex313031/Thorium)**: Bản fork Chromium được tối ưu hóa tối đa về hiệu năng với các cờ biên dịch tối tân (SIMD, AVX/AVX2, Polly, tối ưu render engine và multimedia).
-2. **[Ungoogled-Chromium](https://github.com/ungoogled-software/ungoogled-chromium)**: Triệt tiêu 100% các kết nối ngầm, dịch vụ theo dõi, tài khoản và telemetry của Google.
-
-Mục tiêu chính của dự án là mang lại trải nghiệm duyệt web **nhanh nhất, mượt nhất nhưng hoàn toàn riêng tư**, đặc biệt tối ưu cho các thiết bị cấu hình nhẹ như **TV Box Amlogic S905X (Armbian Linux ARM64)** và máy tính cá nhân (Windows x64).
+<p align="center">
+  <a href="#-english">English</a> • <a href="#-tiếng-việt">Tiếng Việt</a>
+</p>
 
 ---
 
-## ✨ Điểm Nổi Bật (Key Features)
+## 🌐 English
 
-### 🚀 Tốc Độ & Tối Ưu Phần Cứng (Thorium Performance)
-* **Tối ưu hóa tập lệnh SIMD:** Tận dụng tối đa tập lệnh CPU trên cả x86_64 và ARM64 (NEON).
-* **Giải mã phần cứng mượt mà:** Ép chuẩn video H.264 (`avc1`) tương thích hoàn hảo với phần cứng VPU Mali-450 / S905X, tránh giật lag 100% CPU do VP9/AV1.
-* **Hỗ trợ Widevine CDM:** Thưởng thức nội dung đa phương tiện chất lượng cao có bản quyền DRM.
-* **Gọn nhẹ cho RAM 1-2GB:** Cơ chế đóng băng tab nền thông minh, tránh tối đa tràn RAM trên thiết bị nhúng.
+### Overview
+**Ungoogled-Thorium** combines the aggressive compiler optimizations and performance enhancements of **[Thorium Browser](https://github.com/Alex313031/Thorium)** with the total privacy and de-Googling architecture of **[Ungoogled-Chromium](https://github.com/ungoogled-software/ungoogled-chromium)**.
 
-### 🛡️ Riêng Tư Tuyệt Đối (Ungoogled Privacy)
-* **Không dịch vụ Google:** Gỡ bỏ Google Sync, Safe Browsing telemetry, Google Host Detector, WebRTC IP leakage.
-* **Domain Substitution:** Thay thế các domain theo dõi của Google bằng tên miền giả lập không thể kết nối (`qjz9zk`).
-* **Pruned Binaries:** Loại bỏ toàn bộ binary blob đóng của Google khỏi mã nguồn biên dịch.
+Designed for raw speed without compromises, this project provides modern, ultra-responsive builds with specialized hardware optimizations for **Linux ARM64** (including Amlogic S905X TV Boxes / Raspberry Pi on Armbian) and **Windows x64**.
 
-### 🤖 CI/CD Tự Động Hóa (GitHub Actions)
-* Tự động build và đóng gói định dạng **`.AppImage`** cho Linux ARM64.
-* Tự động build file cài đặt **`mini_installer.exe`** cho Windows x64.
-* Sử dụng bộ nhớ đệm `sccache` và tối ưu dung lượng đĩa giúp quá trình build thông suốt.
+### Key Features
+* 🚀 **Thorium Engine Optimizations:** Compiler-level tuning with SIMD vectorization (NEON / AVX), ThinLTO, fast page load and smooth multimedia rendering.
+* 🛡️ **Zero Google Dependency:** Completely stripped of Google background telemetry, sync daemons, tracking requests, and proprietary binary blobs.
+* 🎬 **Hardware Video Decoding:** Enforces H.264 (`avc1`) playback for smooth hardware acceleration on low-power VPUs (Mali-450 / S905X), eliminating CPU bottlenecks from VP9/AV1.
+* 🔒 **Widevine DRM Support:** Enjoy protected streaming services with out-of-the-box CDM compatibility.
+* 🧊 **Lightweight Memory Footprint:** Tailored for 1–2 GB RAM devices with aggressive background tab discarding to prevent out-of-memory crashes.
+* 🤖 **Automated CI/CD:** Fully automated cross-compilation pipeline yielding standalone `.AppImage` (Linux ARM64) and `mini_installer.exe` (Windows x64) artifacts.
 
----
+### Downloads
+Download the latest binaries directly from **[Releases](https://github.com/starfish367/ungoogled-thorium/releases)** or the **[Actions Artifacts](https://github.com/starfish367/ungoogled-thorium/actions)** tab.
 
-## 📦 Tải Về & Cài Đặt (Downloads)
-
-Các bản dựng mới nhất được tạo tự động tại mục **[Releases](https://github.com/starfish367/ungoogled-thorium/releases)** hoặc tab **[Actions Artifacts](https://github.com/starfish367/ungoogled-thorium/actions)**.
-
-### 1. Linux ARM64 (Armbian / Raspberry Pi / TV Box)
-Tải file `Thorium-Ungoogled-Linux-arm64.AppImage`, cấp quyền thực thi và chạy:
+#### Running on Linux ARM64 (Armbian / Raspberry Pi / TV Box)
 ```bash
 chmod +x Thorium-Ungoogled-Linux-arm64.AppImage
 ./Thorium-Ungoogled-Linux-arm64.AppImage
 ```
 
-### 2. Windows x64
-Tải file `mini_installer.exe` và chạy trực tiếp để cài đặt.
+#### Running on Windows x64
+Download `mini_installer.exe` and execute it directly.
 
 ---
 
-## 🛠️ Hướng Dẫn Tự Biên Dịch (Building from Source)
+## 🇻🇳 Tiếng Việt
 
-Dự án hỗ trợ biên dịch trực tiếp trên máy hoặc thông qua **GitHub Actions Workflow**:
+### Giới Thiệu
+**Ungoogled-Thorium** là dự án kết hợp sức mạnh vượt trội của **[Thorium Browser](https://github.com/Alex313031/Thorium)** (trình duyệt Chromium nhanh nhất thế giới) với kiến trúc bảo mật, riêng tư của **[Ungoogled-Chromium](https://github.com/ungoogled-software/ungoogled-chromium)** (gỡ bỏ 100% dịch vụ và kết nối ngầm của Google).
 
-### Kích hoạt qua GitHub Actions:
-1. Vào tab **Actions** -> Chọn workflow **Build Thorium + Ungoogled**.
-2. Bấm **Run workflow**, chọn target mong muốn (`linux-arm64`, `windows-x64`, hoặc `all`).
-3. Chờ workflow hoàn tất và tải về artifact ở cuối trang.
+Dự án mang lại trải nghiệm duyệt web siêu tốc độ, nhẹ nhàng và an toàn, đặc biệt được tối ưu hóa cho các dòng máy cấu hình nhẹ như **TV Box Amlogic S905X (chạy Armbian OS, CPU Cortex-A53, RAM 1-2GB)** cũng như máy tính cá nhân **Windows x64**.
 
-### Biên dịch thủ công (CLI):
+### Tính Năng Nổi Bật
+* 🚀 **Tối ưu hóa phần cứng & Tốc độ:** Khai thác tập lệnh SIMD (NEON trên ARM64, AVX trên x86_64), tối ưu bộ nhớ đệm và công cụ kết xuất đồ họa.
+* 🛡️ **Triệt tiêu dịch vụ Google:** Loại bỏ toàn bộ telemetry, báo cáo lỗi ngầm, Google Sync, Google Host Detector và thay thế bằng domain giả lập an toàn (`qjz9zk`).
+* 🎬 **Tối ưu xem video mượt mà:** Ép giải mã phần cứng chuẩn video H.264 (`avc1`), bảo vệ chip S905X không bị quá tải 100% CPU hay giật lag khi xem YouTube.
+* 🔒 **Tích hợp Widevine CDM:** Hỗ trợ xem các trang phim và truyền hình bản quyền mượt mà.
+* 🧊 **Tiết kiệm RAM tối đa:** Cơ chế tự động đóng băng các tab chạy ngầm khi RAM chạm ngưỡng, giúp thiết bị 1–2GB RAM không bao giờ bị tràn bộ nhớ hay văng ứng dụng.
+* 🤖 **Quy trình Build tự động:** Tự động biên dịch qua GitHub Actions, xuất bản trực tiếp định dạng di động **`.AppImage`** cho Linux và **`mini_installer.exe`** cho Windows.
+
+### Hướng Dẫn Cài Đặt & Sử Dụng
+Tải bản dựng mới nhất tại mục **[Releases](https://github.com/starfish367/ungoogled-thorium/releases)** hoặc tab **[Actions Artifacts](https://github.com/starfish367/ungoogled-thorium/actions)**.
+
+#### Dành cho Linux ARM64 (Armbian / TV Box S905X / Raspberry Pi)
 ```bash
-# Cài đặt môi trường Python 3.11+
+chmod +x Thorium-Ungoogled-Linux-arm64.AppImage
+./Thorium-Ungoogled-Linux-arm64.AppImage
+```
+
+#### Dành cho Windows x64
+Tải file `mini_installer.exe` và khởi chạy để cài đặt như bình thường.
+
+---
+
+## 🛠️ Build from Source / Tự Biên Dịch
+
+### Kích hoạt tự động trên GitHub Actions:
+1. Truy cập tab **Actions** -> Chọn workflow **Build Thorium + Ungoogled**.
+2. Bấm **Run workflow**, chọn target mong muốn (`linux-arm64`, `windows-x64`, hoặc `all`).
+3. Đợi pipeline hoàn tất và tải về file thành phẩm.
+
+### Biên dịch thủ công qua Command Line:
+```bash
+# Yêu cầu Python 3.11+
 python build_thorium_ungoogled.py --target-os linux --target-cpu arm64 --src-dir src
 ```
 
 ---
 
-## 🤝 Đóng Góp & Lời Cảm Ơn (Credits)
-
-Dự án xin chân thành gửi lời cảm ơn đến:
-* **[Alex313031](https://github.com/Alex313031)** cùng đội ngũ phát triển **Thorium Browser**.
-* Đội ngũ phát triển **[Ungoogled-Chromium](https://github.com/ungoogled-software/ungoogled-chromium)**.
+## 🤝 Credits / Lời Cảm Ơn
+* **[Alex313031](https://github.com/Alex313031)** & Thorium Browser Team.
+* **[Ungoogled-Chromium Project](https://github.com/ungoogled-software/ungoogled-chromium)** & Contributors.
 * **The Chromium Project**.
 
 ---
 
-## 📄 Bản Quyền (License)
-
-Dự án được phân phối dưới giấy phép **[BSD 3-Clause License](LICENSE)**.
+## 📄 License / Bản Quyền
+Distributed under the **[BSD 3-Clause License](LICENSE)**.
