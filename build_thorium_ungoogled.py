@@ -213,6 +213,9 @@ declare_args() {
   use_libcxx_modules = false
   use_explicit_libcxx_modules = false
   allow_runtime_configurable_key_storage = false
+  is_thorium_build = true
+  is_raspi = false
+  is_chancie_wancie_build = false
 }
 '''
             if 'is_nacl = false' not in content:
@@ -233,6 +236,9 @@ is_high_end_android = false
 use_libcxx_modules = false
 use_explicit_libcxx_modules = false
 allow_runtime_configurable_key_storage = false
+is_thorium_build = true
+is_raspi = false
+is_chancie_wancie_build = false
 '''
             if 'thorium_simd_optimization' not in content:
                 content += '\n# Thorium SIMD optimization config\ndefault_compiler_configs += [ "//build/config/compiler:thorium_simd_optimization" ]\n'
