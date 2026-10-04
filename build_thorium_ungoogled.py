@@ -226,6 +226,7 @@ def main():
         'chrome/app/vector_icons/BUILD.gn',
         'net/cert/x509_util.cc',
         'net/base/load_flags_list.h',
+        'net/url_request/url_request_http_job.cc',
         'media/media_options.gni',
     ]:
         full_path = os.path.join(src_dir, rel_path)
@@ -351,6 +352,25 @@ build_with_tflite_lib = false
 LOAD_FLAG(SKIP_VARY_CHECK, 1 << 20)
 LOAD_FLAG(MINIMAL_HEADERS, 1 << 21)
 '''
+        elif rel_path == 'build/config/win/BUILD.gn':
+            content = content.replace(
+                '"NTDDI_VERSION=NTDDI_WIN11_BR",',
+                '"NTDDI_WIN11_BR=0x0A000011",\n    "NTDDI_VERSION=0x0A000011",'
+            )
+        elif rel_path == 'net/url_request/url_request_http_job.cc':
+            if 'LOAD_MINIMAL_HEADERS' not in content:
+                content = content.replace(
+                    'if (referrer.is_valid()) {\n    std::string referer_value = referrer.spec();\n    request_info_.extra_headers.SetHeader(HttpRequestHeaders::kReferer,\n                                          referer_value);\n  }',
+                    'if (!(request_info_.load_flags & LOAD_MINIMAL_HEADERS)) {\n    if (referrer.is_valid()) {\n      std::string referer_value = referrer.spec();\n      request_info_.extra_headers.SetHeader(HttpRequestHeaders::kReferer,\n                                            referer_value);\n    }\n  }'
+                )
+                content = content.replace(
+                    'request_info_.extra_headers.SetHeaderIfMissing(\n      HttpRequestHeaders::kUserAgent,\n      http_user_agent_settings_ ? http_user_agent_settings_->GetUserAgent()\n                                : std::string());',
+                    'if (!(request_info_.load_flags & LOAD_MINIMAL_HEADERS)) {\n    request_info_.extra_headers.SetHeaderIfMissing(\n        HttpRequestHeaders::kUserAgent,\n        http_user_agent_settings_ ? http_user_agent_settings_->GetUserAgent()\n                                  : std::string());\n  }'
+                )
+                content = content.replace(
+                    'request()->context()->enable_brotli(),\n      request()->context()->enable_zstd());\n\n  if (http_user_agent_settings_) {',
+                    '!(request_info_.load_flags & LOAD_MINIMAL_HEADERS) && request()->context()->enable_brotli(),\n      !(request_info_.load_flags & LOAD_MINIMAL_HEADERS) && request()->context()->enable_zstd());\n\n  if (!(request_info_.load_flags & LOAD_MINIMAL_HEADERS) && http_user_agent_settings_) {'
+                )
         elif rel_path == 'chrome/browser/BUILD.gn':
             if 'thorium_flag_choices.h' not in content and '"about_flags.cc",' in content:
                 content = content.replace(
