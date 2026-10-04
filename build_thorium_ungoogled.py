@@ -658,6 +658,16 @@ declare_args() {
             with open(chrome_build_gn, 'w', encoding='utf-8') as f:
                 f.write(ch_bg)
 
+    # Patch chrome/installer/mini_installer/BUILD.gn to reference thorium.exe for Windows
+    mini_installer_build_gn = os.path.join(src_dir, 'chrome', 'installer', 'mini_installer', 'BUILD.gn')
+    if os.path.exists(mini_installer_build_gn):
+        with open(mini_installer_build_gn, 'r', encoding='utf-8') as f:
+            mi_bg = f.read()
+        if '"$root_out_dir/chrome.exe"' in mi_bg:
+            mi_bg = mi_bg.replace('"$root_out_dir/chrome.exe"', '"$root_out_dir/thorium.exe"')
+            with open(mini_installer_build_gn, 'w', encoding='utf-8') as f:
+                f.write(mi_bg)
+
     # Patch ui/native_theme/BUILD.gn to forward native_theme_browser to native_theme
     native_theme_build_gn = os.path.join(src_dir, 'ui', 'native_theme', 'BUILD.gn')
     if os.path.exists(native_theme_build_gn):
