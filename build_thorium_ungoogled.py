@@ -164,6 +164,16 @@ def main():
         if os.path.exists(sysroot_script):
             run_cmd([sys.executable, sysroot_script, '--arch=arm64'], cwd=src_dir)
 
+    # Ensure rust windows msvc import libs are never pruned
+    pruning_list_path = os.path.join(root_dir, 'pruning.list')
+    if os.path.exists(pruning_list_path):
+        with open(pruning_list_path, 'r', encoding='utf-8') as f:
+            pl_content = f.read()
+        if 'windows_x86_64_msvc' in pl_content:
+            lines = [l for l in pl_content.splitlines() if not ('windows_' in l and '_msvc' in l and '.lib' in l)]
+            with open(pruning_list_path, 'w', encoding='utf-8') as f:
+                f.write('\n'.join(lines) + '\n')
+
     # Apply ungoogled-chromium modifications
     print("Applying ungoogled-chromium modifications...")
     run_cmd([sys.executable, 'utils/prune_binaries.py', '--ignore-missing', '--keep-contingent-paths', src_dir, 'pruning.list'], cwd=root_dir)
