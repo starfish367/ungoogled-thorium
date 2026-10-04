@@ -225,6 +225,7 @@ def main():
         'components/vector_icons/BUILD.gn',
         'chrome/app/vector_icons/BUILD.gn',
         'net/cert/x509_util.cc',
+        'net/base/load_flags_list.h',
         'media/media_options.gni',
     ]:
         full_path = os.path.join(src_dir, rel_path)
@@ -343,6 +344,13 @@ build_with_tflite_lib = false
 
   if (is_mac) {'''
                 )
+        elif rel_path == 'net/base/load_flags_list.h':
+            if 'MINIMAL_HEADERS' not in content:
+                content += '''
+// Thorium custom load flags
+LOAD_FLAG(SKIP_VARY_CHECK, 1 << 20)
+LOAD_FLAG(MINIMAL_HEADERS, 1 << 21)
+'''
         elif rel_path == 'chrome/browser/BUILD.gn':
             if 'thorium_flag_choices.h' not in content and '"about_flags.cc",' in content:
                 content = content.replace(
@@ -763,6 +771,16 @@ group("native_theme_browser") {
             st_code = re.sub(pattern, 'continue', st_code)
             with open(setup_toolchain_path, 'w', encoding='utf-8') as f:
                 f.write(st_code)
+
+        # Ensure dxil.dll is available in expected SDK version folder
+        sdk_root = r"C:\Program Files (x86)\Windows Kits\10"
+        if os.path.exists(sdk_root):
+            import glob
+            dxil_candidates = glob.glob(f"{sdk_root}\\**\\dxil.dll", recursive=True)
+            if dxil_candidates:
+                target_sdk_dir = f"{sdk_root}\\bin\\10.0.28000.0\\x64"
+                os.makedirs(target_sdk_dir, exist_ok=True)
+                shutil.copy2(dxil_candidates[0], os.path.join(target_sdk_dir, 'dxil.dll'))
 
     thorium_patches_dir = os.path.join(thorium_dir, 'patches')
     if os.path.exists(thorium_patches_dir):

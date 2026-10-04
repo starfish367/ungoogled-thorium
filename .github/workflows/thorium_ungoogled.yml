@@ -92,6 +92,16 @@ jobs:
       - name: Install sccache
         uses: mozilla-actions/sccache-action@v0.0.4
 
+      - name: Ensure Windows SDK dxil.dll
+        shell: pwsh
+        run: |
+          $dxil = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10" -Recurse -Filter "dxil.dll" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($dxil) {
+            Write-Host "Found dxil.dll at: $($dxil.FullName)"
+            New-Item -ItemType Directory -Force -Path "C:\Program Files (x86)\Windows Kits\10\bin\10.0.28000.0\x64" | Out-Null
+            Copy-Item $dxil.FullName "C:\Program Files (x86)\Windows Kits\10\bin\10.0.28000.0\x64\dxil.dll" -Force
+          }
+
       - name: Run Build Script
         run: python build_thorium_ungoogled.py --target-os win --target-cpu x64 --src-dir D:\src
         env:
