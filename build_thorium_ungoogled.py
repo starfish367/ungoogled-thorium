@@ -214,6 +214,7 @@ def main():
         'third_party/widevine/cdm/BUILD.gn',
         'components/vector_icons/BUILD.gn',
         'chrome/app/vector_icons/BUILD.gn',
+        'net/cert/x509_util.cc',
         'media/media_options.gni',
     ]:
         full_path = os.path.join(src_dir, rel_path)
