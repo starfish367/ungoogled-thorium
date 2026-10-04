@@ -227,6 +227,8 @@ def main():
         'net/cert/x509_util.cc',
         'net/base/load_flags_list.h',
         'net/url_request/url_request_http_job.cc',
+        'net/dns/dns_transaction.cc',
+        'net/dns/dns_client.cc',
         'media/media_options.gni',
     ]:
         full_path = os.path.join(src_dir, rel_path)
