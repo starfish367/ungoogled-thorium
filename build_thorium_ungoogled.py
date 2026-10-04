@@ -212,6 +212,8 @@ def main():
         'ash/webui/sample_system_web_app_ui/resources/untrusted/BUILD.gn',
         'chrome/installer/linux/BUILD.gn',
         'third_party/widevine/cdm/BUILD.gn',
+        'components/vector_icons/BUILD.gn',
+        'chrome/app/vector_icons/BUILD.gn',
         'media/media_options.gni',
     ]:
         full_path = os.path.join(src_dir, rel_path)
@@ -292,6 +294,44 @@ build_with_tflite_lib = false
             content = content.replace('binary = "$root_out_dir/chrome"', 'binary = "$root_out_dir/thorium"')
         elif rel_path == 'chrome/installer/linux/BUILD.gn':
             content = content.replace('"$root_out_dir/chrome"', '"$root_out_dir/thorium"')
+        elif rel_path == 'components/vector_icons/BUILD.gn':
+            if 'if (is_chromeos)' in content and 'reload_thorium.icon' not in content:
+                content = content.replace(
+                    'if (is_chromeos) {',
+                    '''if (is_thorium_build) {
+      sources += [
+        "thorium/reload_thorium.icon",
+        "thorium/reload_chrome_refresh_thorium.icon",
+        "thorium/restore_tab.icon",
+      ]
+    }
+
+    if (is_chromeos) {'''
+                )
+        elif rel_path == 'chrome/app/vector_icons/BUILD.gn':
+            if 'if (is_mac)' in content and 'browser_tools_thorium.icon' not in content:
+                content = content.replace(
+                    'if (is_mac) {',
+                    '''if (is_thorium_build) {
+    sources += [
+      "thorium/browser_tools_thorium.icon",
+      "thorium/browser_tools_chrome_refresh_thorium.icon",
+      "thorium/chrome_labs_thorium.icon",
+      "thorium/chrome_labs_chrome_refresh_thorium.icon",
+      "thorium/navigate_home_thorium.icon",
+      "thorium/navigate_home_chrome_refresh_thorium.icon",
+      "thorium/science_thorium.icon",
+      "thorium/side_panel_left_thorium.icon",
+      "thorium/side_panel_left_chrome_refresh_thorium.icon",
+      "thorium/side_panel_left_touch_thorium.icon",
+      "thorium/side_panel_thorium.icon",
+      "thorium/side_panel_chrome_refresh_thorium.icon",
+      "thorium/side_panel_touch_thorium.icon",
+    ]
+  }
+
+  if (is_mac) {'''
+                )
         elif rel_path == 'chrome/browser/BUILD.gn':
             if 'thorium_flag_choices.h' not in content and '"about_flags.cc",' in content:
                 content = content.replace(
@@ -579,6 +619,16 @@ declare_args() {
                 cros_code += '\nchromeos_is_browser_only = false\nis_chromeos_lacros = false\n'
                 with open(cros_full, 'w', encoding='utf-8') as f:
                     f.write(cros_code)
+
+    # Ensure rlz buildflags allow is_win for Windows installer
+    rlz_buildflags_path = os.path.join(src_dir, 'rlz', 'buildflags', 'buildflags.gni')
+    if os.path.exists(rlz_buildflags_path):
+        with open(rlz_buildflags_path, 'r', encoding='utf-8') as f:
+            rb_content = f.read()
+        if 'enable_rlz_support = false' in rb_content:
+            rb_content = rb_content.replace('enable_rlz_support = false', 'enable_rlz_support = is_win')
+            with open(rlz_buildflags_path, 'w', encoding='utf-8') as f:
+                f.write(rb_content)
 
     # Patch build/config/compiler/BUILD.gn to safely handle use_libcxx_modules
     compiler_build_gn = os.path.join(src_dir, 'build', 'config', 'compiler', 'BUILD.gn')
