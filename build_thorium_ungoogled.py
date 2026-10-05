@@ -360,6 +360,10 @@ LOAD_FLAG(MINIMAL_HEADERS, 1 << 21)
                 '"NTDDI_VERSION=NTDDI_WIN11_BR",',
                 '"NTDDI_WIN11_BR=0x0A000011",\n    "NTDDI_VERSION=0x0A000011",'
             )
+            content = content.replace(
+                '"/ignore:4221",',
+                '"/ignore:4221",\n    "/ignore:emptyoutput",\n    "/llvmlibempty",'
+            )
         elif rel_path == 'net/url_request/url_request_http_job.cc':
             if 'LOAD_MINIMAL_HEADERS' not in content:
                 content = content.replace(
