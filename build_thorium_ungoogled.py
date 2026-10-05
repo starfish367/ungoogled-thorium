@@ -232,6 +232,8 @@ def main():
         'ui/base/x/x11_util.cc',
         'google_apis/default_api_keys.h',
         'google_apis/default_api_keys-inc.cc',
+        'media/base/supported_types.cc',
+        'media/base/media_switches.cc',
         'media/media_options.gni',
     ]:
         full_path = os.path.join(src_dir, rel_path)
@@ -385,6 +387,18 @@ LOAD_FLAG(MINIMAL_HEADERS, 1 << 21)
                 '  // Stacking WMs should use custom frames.\n  return !IsWmTiling(wm);',
                 '  // Never default to using the custom title bar, unless the windows manager is a tiling WM.\n  // Thorium should integrate, not be a special little snowflake.\n  return false;'
             )
+        elif rel_path == 'media/base/media_switches.cc':
+            if 'kAutoplayDisableSettings' not in content:
+                content += '''
+// Thorium custom media features
+BASE_FEATURE(kAutoplayDisableSettings,
+             "AutoplayDisableSettings",
+             base::FEATURE_DISABLED_BY_DEFAULT);
+
+BASE_FEATURE(kAVDColorSpaceChanges,
+             "AVDColorSpaceChanges",
+             base::FEATURE_ENABLED_BY_DEFAULT);
+'''
         elif rel_path == 'chrome/browser/BUILD.gn':
             if 'thorium_flag_choices.h' not in content and '"about_flags.cc",' in content:
                 content = content.replace(
