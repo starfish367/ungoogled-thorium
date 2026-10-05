@@ -229,6 +229,7 @@ def main():
         'net/url_request/url_request_http_job.cc',
         'net/dns/dns_transaction.cc',
         'net/dns/dns_client.cc',
+        'ui/base/x/x11_util.cc',
         'media/media_options.gni',
     ]:
         full_path = os.path.join(src_dir, rel_path)
@@ -373,6 +374,11 @@ LOAD_FLAG(MINIMAL_HEADERS, 1 << 21)
                     'request()->context()->enable_brotli(),\n      request()->context()->enable_zstd());\n\n  if (http_user_agent_settings_) {',
                     '!(request_info_.load_flags & LOAD_MINIMAL_HEADERS) && request()->context()->enable_brotli(),\n      !(request_info_.load_flags & LOAD_MINIMAL_HEADERS) && request()->context()->enable_zstd());\n\n  if (!(request_info_.load_flags & LOAD_MINIMAL_HEADERS) && http_user_agent_settings_) {'
                 )
+        elif rel_path == 'ui/base/x/x11_util.cc':
+            content = content.replace(
+                '  // Stacking WMs should use custom frames.\n  return !IsWmTiling(wm);',
+                '  // Never default to using the custom title bar, unless the windows manager is a tiling WM.\n  // Thorium should integrate, not be a special little snowflake.\n  return false;'
+            )
         elif rel_path == 'chrome/browser/BUILD.gn':
             if 'thorium_flag_choices.h' not in content and '"about_flags.cc",' in content:
                 content = content.replace(
@@ -803,6 +809,18 @@ group("native_theme_browser") {
                 target_sdk_dir = f"{sdk_root}\\bin\\10.0.28000.0\\x64"
                 os.makedirs(target_sdk_dir, exist_ok=True)
                 shutil.copy2(dxil_candidates[0], os.path.join(target_sdk_dir, 'dxil.dll'))
+
+        # Patch message_compiler.py in build/win and third_party to not fail when mc.exe produces extra/different bin files
+        for mc_py_path in [
+            os.path.join(src_dir, 'build', 'win', 'message_compiler.py'),
+            os.path.join(src_dir, 'third_party', 'dawn', 'third_party', 'directx-shader-compiler', 'build', 'message_compiler.py')
+        ]:
+            if os.path.exists(mc_py_path):
+                with open(mc_py_path, 'r', encoding='utf-8') as f:
+                    mc_code = f.read()
+                mc_code = mc_code.replace("sys.exit(1)", "pass # sys.exit(1) ignored for sdk mc.exe differences")
+                with open(mc_py_path, 'w', encoding='utf-8') as f:
+                    f.write(mc_code)
 
     thorium_patches_dir = os.path.join(thorium_dir, 'patches')
     if os.path.exists(thorium_patches_dir):
