@@ -230,6 +230,8 @@ def main():
         'net/dns/dns_transaction.cc',
         'net/dns/dns_client.cc',
         'ui/base/x/x11_util.cc',
+        'google_apis/default_api_keys.h',
+        'google_apis/default_api_keys-inc.cc',
         'media/media_options.gni',
     ]:
         full_path = os.path.join(src_dir, rel_path)
