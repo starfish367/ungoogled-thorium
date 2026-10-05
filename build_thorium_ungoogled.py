@@ -361,8 +361,8 @@ LOAD_FLAG(MINIMAL_HEADERS, 1 << 21)
                 '"NTDDI_WIN11_BR=0x0A000011",\n    "NTDDI_VERSION=0x0A000011",'
             )
             content = content.replace(
-                '"/ignore:4221",',
-                '"/ignore:4221",\n    "/ignore:emptyoutput",\n    "/llvmlibempty",'
+                '  arflags = [\n    # "No public symbols found; archive member will be inaccessible." This\n    # means that one or more object files in the library can never be\n    # pulled in to targets that link to this library. It\'s just a warning that\n    # the source file is a no-op.\n    "/ignore:4221",\n  ]',
+                '  arflags = [\n    "/ignore:4221",\n    "/ignore:emptyoutput",\n    "/llvmlibempty",\n  ]'
             )
         elif rel_path == 'net/url_request/url_request_http_job.cc':
             if 'LOAD_MINIMAL_HEADERS' not in content:
