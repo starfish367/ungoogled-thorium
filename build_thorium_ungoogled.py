@@ -683,6 +683,19 @@ declare_args() {
             with open(rlz_buildflags_path, 'w', encoding='utf-8') as f:
                 f.write(rb_content)
 
+    # Patch tools/grit/grit/node/base.py to safely handle undefined Grit variables (e.g. chromeos_ash / chromeos_lacros in Chromium 154)
+    grit_base_path = os.path.join(src_dir, 'tools', 'grit', 'grit', 'node', 'base.py')
+    if os.path.exists(grit_base_path):
+        with open(grit_base_path, 'r', encoding='utf-8') as f:
+            gb_code = f.read()
+        if "assert False, 'undefined Grit variable found: ' + name" in gb_code:
+            gb_code = gb_code.replace(
+                "assert False, 'undefined Grit variable found: ' + name",
+                "value = False  # undefined Grit variable fallback for removed cros flags"
+            )
+            with open(grit_base_path, 'w', encoding='utf-8') as f:
+                f.write(gb_code)
+
     # Patch build/config/compiler/BUILD.gn to safely handle use_libcxx_modules
     compiler_build_gn = os.path.join(src_dir, 'build', 'config', 'compiler', 'BUILD.gn')
     if os.path.exists(compiler_build_gn):
