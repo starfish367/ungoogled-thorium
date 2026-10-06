@@ -234,6 +234,7 @@ def main():
         'google_apis/default_api_keys-inc.cc',
         'media/base/supported_types.cc',
         'media/base/media_switches.cc',
+        'media/ffmpeg/ffmpeg_common.cc',
         'media/media_options.gni',
     ]:
         full_path = os.path.join(src_dir, rel_path)
@@ -399,6 +400,11 @@ BASE_FEATURE(kAVDColorSpaceChanges,
              "AVDColorSpaceChanges",
              base::FEATURE_ENABLED_BY_DEFAULT);
 '''
+        elif rel_path == 'media/ffmpeg/ffmpeg_common.cc':
+            content = content.replace(
+                'allowed_decoders += ",aac";',
+                'allowed_decoders += ",aac";\n    allowed_decoders += ",ac3";\n    allowed_decoders += ",eac3";'
+            )
         elif rel_path == 'chrome/browser/BUILD.gn':
             if 'thorium_flag_choices.h' not in content and '"about_flags.cc",' in content:
                 content = content.replace(
