@@ -235,6 +235,8 @@ def main():
         'media/base/supported_types.cc',
         'media/base/media_switches.cc',
         'media/ffmpeg/ffmpeg_common.cc',
+        'media/filters/ffmpeg_glue.cc',
+        'media/filters/ffmpeg_video_decoder.cc',
         'media/media_options.gni',
     ]:
         full_path = os.path.join(src_dir, rel_path)
@@ -404,6 +406,11 @@ BASE_FEATURE(kAVDColorSpaceChanges,
             content = content.replace(
                 'allowed_decoders += ",aac";',
                 'allowed_decoders += ",aac";\n    allowed_decoders += ",ac3";\n    allowed_decoders += ",eac3";'
+            )
+        elif rel_path == 'media/filters/ffmpeg_glue.cc':
+            content = content.replace(
+                'allowed_demuxers.push_back("aac");',
+                'allowed_demuxers.push_back("aac");\n    allowed_demuxers.push_back("ac3");\n    allowed_demuxers.push_back("eac3");'
             )
         elif rel_path == 'chrome/browser/BUILD.gn':
             if 'thorium_flag_choices.h' not in content and '"about_flags.cc",' in content:
