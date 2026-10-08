@@ -237,6 +237,7 @@ def main():
         'media/ffmpeg/ffmpeg_common.cc',
         'media/filters/ffmpeg_glue.cc',
         'media/filters/ffmpeg_video_decoder.cc',
+        'third_party/blink/common/features.cc',
         'media/media_options.gni',
     ]:
         full_path = os.path.join(src_dir, rel_path)
@@ -412,6 +413,26 @@ BASE_FEATURE(kAVDColorSpaceChanges,
                 'allowed_demuxers.push_back("aac");',
                 'allowed_demuxers.push_back("aac");\n    allowed_demuxers.push_back("ac3");\n    allowed_demuxers.push_back("eac3");'
             )
+        elif rel_path == 'third_party/blink/common/features.cc':
+            if 'kBoostRenderProcessForLoading' not in content:
+                content += '''
+// Thorium custom blink features
+BASE_FEATURE(kBoostRenderProcessForLoading,
+             "BoostRenderProcessForLoading",
+             base::FEATURE_ENABLED_BY_DEFAULT);
+
+BASE_FEATURE(kTimedHTMLParserBudget,
+             "TimedHTMLParserBudget",
+             base::FEATURE_ENABLED_BY_DEFAULT);
+
+BASE_FEATURE(kUseZstdForParkableStrings,
+             "UseZstdForParkableStrings",
+             base::FEATURE_ENABLED_BY_DEFAULT);
+
+BASE_FEATURE(kWebAudioRemoveAudioDestinationResampler,
+             "WebAudioRemoveAudioDestinationResampler",
+             base::FEATURE_DISABLED_BY_DEFAULT);
+'''
         elif rel_path == 'chrome/browser/BUILD.gn':
             if 'thorium_flag_choices.h' not in content and '"about_flags.cc",' in content:
                 content = content.replace(
