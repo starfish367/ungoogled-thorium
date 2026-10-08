@@ -50,11 +50,13 @@ jobs:
       - name: Run Build Script
         run: |
           mkdir -p ~/.cache "${GITHUB_WORKSPACE}/.cache" "${GITHUB_WORKSPACE}/.cache/sccache"
+          sccache --start-server || true
           python build_thorium_ungoogled.py --target-os linux --target-cpu arm64 --src-dir src
         env:
           SCCACHE_DIR: "${{ github.workspace }}/.cache/sccache"
           SCCACHE_CACHE_SIZE: "10G"
           SCCACHE_IGNORE_SERVER_IO_ERROR: "1"
+          SCCACHE_IDLE_TIMEOUT: "0"
           XDG_CACHE_HOME: "${{ github.workspace }}/.cache"
           VPYTHON_VIRTUALENV_ROOT: "${{ github.workspace }}/.cache/vpython"
           CIPD_CACHE_DIR: "${{ github.workspace }}/.cache/cipd"
@@ -103,11 +105,15 @@ jobs:
           }
 
       - name: Run Build Script
-        run: python build_thorium_ungoogled.py --target-os win --target-cpu x64 --src-dir D:\src
+        shell: pwsh
+        run: |
+          sccache --start-server
+          python build_thorium_ungoogled.py --target-os win --target-cpu x64 --src-dir D:\src
         env:
           SCCACHE_DIR: "D:\\.sccache"
           SCCACHE_CACHE_SIZE: "20G"
           SCCACHE_IGNORE_SERVER_IO_ERROR: "1"
+          SCCACHE_IDLE_TIMEOUT: "0"
           DEPOT_TOOLS_WIN_TOOLCHAIN: "0"
 
       - name: Upload Artifact
