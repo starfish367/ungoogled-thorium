@@ -238,6 +238,7 @@ def main():
         'media/filters/ffmpeg_glue.cc',
         'media/filters/ffmpeg_video_decoder.cc',
         'third_party/blink/common/features.cc',
+        'components/optimization_guide/core/optimization_guide_features.cc',
         'media/media_options.gni',
     ]:
         full_path = os.path.join(src_dir, rel_path)
