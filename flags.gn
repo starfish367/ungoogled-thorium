@@ -21,3 +21,25 @@ enable_glic=false
 enable_webui_tab_strip=false
 enable_click_to_call=false
 build_with_tflite_lib=false
+
+# V8 JIT & Memory Optimization (ARM64 Cortex-A53 / 1-2GB RAM)
+v8_enable_sparkplug=true
+v8_enable_maglev=true
+v8_enable_turbofan=true
+v8_enable_pointer_compression=true
+
+# Linux ARM64 / Armbian S905X Hardware Tuning
+use_gtk=true
+use_qt=false
+angle_enable_vulkan=false
+angle_enable_gles=true
+arm_use_neon=true
+
+# Stripping unused background services (Lightweight / Low RAM)
+enable_speech_service=false
+enable_print_preview=false
+enable_lens_desktop_google_search=false
+enable_compose=false
+enable_cast_receiver=false
+enable_cast_discovery=false
+enable_vr=false
