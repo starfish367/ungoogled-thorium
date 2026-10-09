@@ -1,65 +1,86 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
   <defs>
-    <!-- Background Gradient -->
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f0c1b"/>
-      <stop offset="50%" stop-color="#1a153a"/>
-      <stop offset="100%" stop-color="#0b0914"/>
-    </linearGradient>
+    <!-- Background subtle shadow/glow -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#0f172a" flood-opacity="0.35"/>
+    </filter>
 
-    <!-- Shield Border Gradient -->
-    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#a855f7"/>
-      <stop offset="50%" stop-color="#06b6d4"/>
-      <stop offset="100%" stop-color="#3b82f6"/>
-    </linearGradient>
-
-    <!-- Lightning / Speed Gradient -->
-    <linearGradient id="lightningGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <!-- Sleek Modern Gradients -->
+    <linearGradient id="gradTop" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#38bdf8"/>
-      <stop offset="50%" stop-color="#c084fc"/>
-      <stop offset="100%" stop-color="#f43f5e"/>
+      <stop offset="100%" stop-color="#2563eb"/>
     </linearGradient>
 
-    <!-- Glow Filter -->
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="12" result="blur"/>
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-    </filter>
+    <linearGradient id="gradRight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
 
-    <filter id="subtleGlow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="6" result="blur"/>
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-    </filter>
+    <linearGradient id="gradBottom" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c084fc"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+
+    <linearGradient id="coreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f1f5f9"/>
+    </linearGradient>
+
+    <linearGradient id="innerCoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
   </defs>
 
-  <!-- Outer Rounded Container -->
-  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
-  <rect width="504" height="504" x="4" y="4" rx="108" fill="none" stroke="url(#shieldGrad)" stroke-width="4" stroke-opacity="0.4"/>
+  <!-- Container Base -->
+  <g filter="url(#shadow)">
+    <!-- Outer Background Shape -->
+    <rect width="512" height="512" rx="128" fill="#0b0f19"/>
+    <rect width="510" height="510" x="1" y="1" rx="127" fill="none" stroke="#ffffff" stroke-opacity="0.08" stroke-width="2"/>
 
-  <!-- Privacy Shield Shape -->
-  <path d="M 256 64 
-           C 340 100, 410 110, 420 120
-           C 420 280, 360 380, 256 448
-           C 152 380, 92 280, 92 120
-           C 102 110, 172 100, 256 64 Z"
-        fill="#131127" 
-        stroke="url(#shieldGrad)" 
-        stroke-width="12" 
-        stroke-linejoin="round"
-        filter="url(#subtleGlow)"/>
+    <!-- Minimalist Chromium Aperture Wings -->
+    <!-- Wing 1: Top Cyan/Blue -->
+    <path d="M 256 96 
+             A 160 160 0 0 1 394 176 
+             L 288 238 
+             A 64 64 0 0 0 256 232 
+             A 64 64 0 0 0 200 264 
+             L 145 168 
+             A 160 160 0 0 1 256 96 Z" 
+          fill="url(#gradTop)"/>
 
-  <!-- Atomic Orbit 1 (Thorium symbol) -->
-  <ellipse cx="256" cy="245" rx="140" ry="52" fill="none" stroke="#a855f7" stroke-width="5" stroke-dasharray="14 10" transform="rotate(-30 256 245)" opacity="0.6"/>
-  
-  <!-- Atomic Orbit 2 -->
-  <ellipse cx="256" cy="245" rx="140" ry="52" fill="none" stroke="#06b6d4" stroke-width="5" stroke-dasharray="14 10" transform="rotate(30 256 245)" opacity="0.6"/>
+    <!-- Wing 2: Right Violet/Indigo -->
+    <path d="M 394 176 
+             A 160 160 0 0 1 346 394 
+             L 256 320 
+             A 64 64 0 0 0 288 288 
+             A 64 64 0 0 0 288 238 
+             L 394 176 Z" 
+          fill="url(#gradRight)"/>
 
-  <!-- Thorium Speed Lightning Bolt -->
-  <polygon points="275,125 185,255 250,255 225,375 335,235 270,235" 
-           fill="url(#lightningGrad)" 
-           filter="url(#glow)"/>
+    <!-- Wing 3: Bottom Pink/Purple -->
+    <path d="M 346 394 
+             A 160 160 0 0 1 118 320 
+             L 200 264 
+             A 64 64 0 0 0 224 312 
+             A 64 64 0 0 0 256 320 
+             L 346 394 Z" 
+          fill="url(#gradBottom)"/>
 
-  <!-- Small Glowing Core Node -->
-  <circle cx="256" cy="245" r="7" fill="#ffffff" filter="url(#glow)"/>
+    <!-- Wing 4: Left Teal Connector to Close Minimalist Loop -->
+    <path d="M 118 320 
+             A 160 160 0 0 1 145 168 
+             L 200 264 
+             L 118 320 Z" 
+          fill="url(#gradTop)" 
+          opacity="0.95"/>
+
+    <!-- Center White Ring & Minimalist Core -->
+    <circle cx="256" cy="256" r="68" fill="#0b0f19"/>
+    <circle cx="256" cy="256" r="60" fill="url(#coreGrad)"/>
+    <circle cx="256" cy="256" r="44" fill="url(#innerCoreGrad)"/>
+
+    <!-- Clean Central Minimalist Spark -->
+    <circle cx="256" cy="256" r="16" fill="#ffffff" opacity="0.95"/>
+  </g>
 </svg>
