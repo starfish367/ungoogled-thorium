@@ -31,15 +31,4 @@ v8_enable_pointer_compression=true
 # Linux ARM64 / Armbian S905X Hardware Tuning
 use_gtk=true
 use_qt=false
-angle_enable_vulkan=false
-angle_enable_gles=true
 arm_use_neon=true
-
-# Stripping unused background services (Lightweight / Low RAM)
-enable_speech_service=false
-enable_print_preview=false
-enable_lens_desktop_google_search=false
-enable_compose=false
-enable_cast_receiver=false
-enable_cast_discovery=false
-enable_vr=false
