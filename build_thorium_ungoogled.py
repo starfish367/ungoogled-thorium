@@ -922,6 +922,8 @@ group("native_theme_browser") {
     if target_os == 'linux':
         gn_args.append('use_sysroot=true')
         gn_args.append('enable_nacl=false')
+        gn_args.append('use_gtk=true')
+        gn_args.append('use_qt=false')
     elif target_os == 'win':
         gn_args.append('enable_nacl=false')
 

@@ -28,7 +28,5 @@ v8_enable_maglev=true
 v8_enable_turbofan=true
 v8_enable_pointer_compression=true
 
-# Linux ARM64 / Armbian S905X Hardware Tuning
-use_gtk=true
-use_qt=false
+# ARM64 Hardware Tuning
 arm_use_neon=true
