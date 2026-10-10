@@ -47,13 +47,13 @@ jobs:
       - name: Install sccache
         uses: mozilla-actions/sccache-action@v0.0.4
 
-      - name: Restore sccache (Linux)
+      - name: Restore Build Output Cache (Linux)
         uses: actions/cache/restore@v4
         with:
-          path: ${{ github.workspace }}/.cache/sccache
-          key: sccache-linux-arm64-${{ github.sha }}-${{ github.run_id }}
+          path: src/src/out/Thorium_arm64
+          key: out-linux-arm64-${{ github.sha }}-${{ github.run_id }}
           restore-keys: |
-            sccache-linux-arm64-
+            out-linux-arm64-
 
       - name: Run Build Script
         run: |
@@ -68,6 +68,13 @@ jobs:
           XDG_CACHE_HOME: "${{ github.workspace }}/.cache"
           VPYTHON_VIRTUALENV_ROOT: "${{ github.workspace }}/.cache/vpython"
           CIPD_CACHE_DIR: "${{ github.workspace }}/.cache/cipd"
+
+      - name: Save Build Output Cache (Linux)
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: src/src/out/Thorium_arm64
+          key: out-linux-arm64-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Save sccache (Linux)
         uses: actions/cache/save@v4
@@ -117,6 +124,14 @@ jobs:
           restore-keys: |
             sccache-windows-x64-
 
+      - name: Restore Build Output Cache (Windows)
+        uses: actions/cache/restore@v4
+        with:
+          path: D:\src\src\out\Thorium_x64
+          key: out-windows-x64-${{ github.sha }}-${{ github.run_id }}
+          restore-keys: |
+            out-windows-x64-
+
       - name: Ensure Windows SDK dxil.dll
         shell: pwsh
         run: |
@@ -138,6 +153,13 @@ jobs:
           SCCACHE_IGNORE_SERVER_IO_ERROR: "1"
           SCCACHE_IDLE_TIMEOUT: "0"
           DEPOT_TOOLS_WIN_TOOLCHAIN: "0"
+
+      - name: Save Build Output Cache (Windows)
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: D:\src\src\out\Thorium_x64
+          key: out-windows-x64-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Save sccache (Windows)
         uses: actions/cache/save@v4
