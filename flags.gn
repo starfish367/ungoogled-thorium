@@ -27,3 +27,4 @@ v8_enable_sparkplug=true
 v8_enable_maglev=true
 v8_enable_turbofan=true
 v8_enable_pointer_compression=true
+use_libcxx_modules=false

@@ -29,7 +29,8 @@ jobs:
       - name: Maximize Build Space
         uses: easimon/maximize-build-space@master
         with:
-          root-reserve-mb: 12288
+          build-mount-path: '/home/runner/work'
+          root-reserve-mb: 8192
           temp-reserve-mb: 64
           swap-size-mb: 1024
           remove-dotnet: 'true'
@@ -41,11 +42,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Redirect Runner Temp to Large Volume
+      - name: Ensure Temp Directory
         run: |
-          mkdir -p "${GITHUB_WORKSPACE}/_temp"
-          sudo rm -rf /home/runner/work/_temp
-          sudo ln -s "${GITHUB_WORKSPACE}/_temp" /home/runner/work/_temp
+          mkdir -p "${GITHUB_WORKSPACE}/_temp" /home/runner/work/_temp
+          chmod 1777 "${GITHUB_WORKSPACE}/_temp" /home/runner/work/_temp
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -64,6 +64,7 @@ jobs:
             out-linux-arm64-
 
       - name: Run Build Script
+        timeout-minutes: 340
         run: |
           mkdir -p ~/.cache "${GITHUB_WORKSPACE}/.cache" "${GITHUB_WORKSPACE}/.cache/sccache"
           sccache --start-server || true
@@ -163,6 +164,7 @@ jobs:
           }
 
       - name: Run Build Script
+        timeout-minutes: 340
         shell: pwsh
         run: |
           sccache --start-server
