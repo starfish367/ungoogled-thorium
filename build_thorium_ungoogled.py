@@ -927,6 +927,9 @@ group("native_theme_browser") {
     elif target_os == 'win':
         gn_args.append('enable_nacl=false')
 
+    if target_cpu in ['arm', 'arm64']:
+        gn_args.append('arm_use_neon=true')
+
     out_dir = f"out/Thorium_{target_cpu}"
     out_path = os.path.join(src_dir, out_dir)
     os.makedirs(out_path, exist_ok=True)

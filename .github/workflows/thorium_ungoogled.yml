@@ -23,11 +23,14 @@ jobs:
   build-linux-arm64:
     if: ${{ (github.event_name != 'workflow_dispatch' || inputs.target == 'all' || inputs.target == 'linux-arm64') && !contains(github.event.head_commit.message, '[skip-linux]') }}
     runs-on: ubuntu-24.04
+    env:
+      TMPDIR: /home/runner/work/_temp
     steps:
       - name: Maximize Build Space
         uses: easimon/maximize-build-space@master
         with:
-          root-reserve-mb: 4096
+          build-mount-path: '/home/runner/work'
+          root-reserve-mb: 8192
           temp-reserve-mb: 64
           swap-size-mb: 1024
           remove-dotnet: 'true'
@@ -35,6 +38,11 @@ jobs:
           remove-haskell: 'true'
           remove-codeql: 'true'
           remove-docker-images: 'true'
+
+      - name: Ensure Temp Directory
+        run: |
+          mkdir -p /home/runner/work/_temp
+          chmod 1777 /home/runner/work/_temp
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -68,6 +76,15 @@ jobs:
           XDG_CACHE_HOME: "${{ github.workspace }}/.cache"
           VPYTHON_VIRTUALENV_ROOT: "${{ github.workspace }}/.cache/vpython"
           CIPD_CACHE_DIR: "${{ github.workspace }}/.cache/cipd"
+
+      - name: Cleanup temporary files before caching
+        if: always()
+        run: |
+          df -h
+          rm -rf ~/.cache/vpython ~/.cache/cipd ~/.cache/pip || true
+          rm -rf src/src/v8/tools/builtins-pgo || true
+          sudo apt-get clean || true
+          df -h
 
       - name: Save Build Output Cache (Linux)
         uses: actions/cache/save@v4

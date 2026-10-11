@@ -27,6 +27,3 @@ v8_enable_sparkplug=true
 v8_enable_maglev=true
 v8_enable_turbofan=true
 v8_enable_pointer_compression=true
-
-# ARM64 Hardware Tuning
-arm_use_neon=true
