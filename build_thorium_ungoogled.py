@@ -73,9 +73,23 @@ def main():
 
     # The actual chromium source ends up in src_dir/src
     actual_src_dir = os.path.join(src_dir, 'src')
+    build_gn_file = os.path.join(actual_src_dir, 'BUILD.gn')
 
-    if not os.path.exists(actual_src_dir):
-        print("Chromium source not found. Fetching...")
+    if not os.path.exists(build_gn_file):
+        print("Chromium source (BUILD.gn) not found. Preparing to fetch...")
+        out_dir_path = os.path.join(actual_src_dir, 'out')
+        backup_out_path = os.path.join(src_dir, 'out_cached_backup')
+        has_cached_out = os.path.exists(out_dir_path)
+
+        if has_cached_out:
+            print(f"Moving cached out directory {out_dir_path} to {backup_out_path} during fetch...")
+            if os.path.exists(backup_out_path):
+                shutil.rmtree(backup_out_path, ignore_errors=True)
+            shutil.move(out_dir_path, backup_out_path)
+
+        if os.path.exists(actual_src_dir):
+            shutil.rmtree(actual_src_dir, ignore_errors=True)
+
         os.makedirs(src_dir, exist_ok=True)
         fetch_exec = 'fetch.bat' if sys.platform == 'win32' else 'fetch'
         for attempt in range(1, 4):
@@ -104,6 +118,13 @@ def main():
                         except Exception:
                             pass
                 time.sleep(10)
+
+        if has_cached_out and os.path.exists(backup_out_path):
+            print(f"Restoring cached out directory to {out_dir_path}...")
+            if os.path.exists(out_dir_path):
+                shutil.rmtree(out_dir_path, ignore_errors=True)
+            shutil.move(backup_out_path, out_dir_path)
+
 
     # Optimize .gclient to exclude heavy unused test suites like VK-GL-CTS
     gclient_file = os.path.join(os.path.dirname(actual_src_dir), '.gclient')
