@@ -24,13 +24,12 @@ jobs:
     if: ${{ (github.event_name != 'workflow_dispatch' || inputs.target == 'all' || inputs.target == 'linux-arm64') && !contains(github.event.head_commit.message, '[skip-linux]') }}
     runs-on: ubuntu-24.04
     env:
-      TMPDIR: /home/runner/work/_temp
+      TMPDIR: "${{ github.workspace }}/_temp"
     steps:
       - name: Maximize Build Space
         uses: easimon/maximize-build-space@master
         with:
-          build-mount-path: '/home/runner/work'
-          root-reserve-mb: 8192
+          root-reserve-mb: 12288
           temp-reserve-mb: 64
           swap-size-mb: 1024
           remove-dotnet: 'true'
@@ -39,13 +38,14 @@ jobs:
           remove-codeql: 'true'
           remove-docker-images: 'true'
 
-      - name: Ensure Temp Directory
-        run: |
-          mkdir -p /home/runner/work/_temp
-          chmod 1777 /home/runner/work/_temp
-
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Redirect Runner Temp to Large Volume
+        run: |
+          mkdir -p "${GITHUB_WORKSPACE}/_temp"
+          sudo rm -rf /home/runner/work/_temp
+          sudo ln -s "${GITHUB_WORKSPACE}/_temp" /home/runner/work/_temp
 
       - name: Set up Python
         uses: actions/setup-python@v5
