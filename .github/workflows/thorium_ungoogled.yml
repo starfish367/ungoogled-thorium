@@ -80,6 +80,9 @@ jobs:
       - name: Cleanup temporary files before caching
         if: always()
         run: |
+          # Dừng hẳn mọi tiến trình build/ninja/clang còn chạy ngầm để tránh lỗi file changed as we read it
+          sudo killall -9 ninja clang clang++ python3 2>/dev/null || true
+          sleep 3
           df -h
           rm -rf ~/.cache/vpython ~/.cache/cipd ~/.cache/pip || true
           rm -rf src/src/v8/tools/builtins-pgo || true
@@ -170,6 +173,14 @@ jobs:
           SCCACHE_IGNORE_SERVER_IO_ERROR: "1"
           SCCACHE_IDLE_TIMEOUT: "0"
           DEPOT_TOOLS_WIN_TOOLCHAIN: "0"
+
+      - name: Cleanup temporary files before caching (Windows)
+        if: always()
+        shell: pwsh
+        run: |
+          Stop-Process -Name ninja, clang-cl, python -Force -ErrorAction SilentlyContinue
+          Start-Sleep -Seconds 3
+          Get-PSDrive
 
       - name: Save Build Output Cache (Windows)
         uses: actions/cache/save@v4
