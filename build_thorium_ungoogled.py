@@ -20,6 +20,22 @@ def run_cmd(cmd, cwd=None, env=None, check=True, shell=False):
     subprocess.run(cmd, cwd=cwd, env=env, check=check, shell=shell)
     sys.stdout.flush()
 
+def align_source_timestamps(src_dir, out_dir):
+    out_full = os.path.abspath(os.path.join(src_dir, out_dir))
+    past_timestamp = 1700000000.0  # 2023-11-15 00:00:00
+    print(f"Aligning source timestamps in {src_dir} (excluding {out_dir}) to preserve incremental cache...")
+    count = 0
+    for root, dirs, files in os.walk(src_dir):
+        dirs[:] = [d for d in dirs if d != '.git' and d != 'out' and os.path.abspath(os.path.join(root, d)) != out_full]
+        for f in files:
+            p = os.path.join(root, f)
+            try:
+                os.utime(p, (past_timestamp, past_timestamp))
+                count += 1
+            except OSError:
+                pass
+    print(f"Aligned {count} source files to {past_timestamp}.")
+
 def get_chromium_version(root_dir):
     version_file = os.path.join(root_dir, 'chromium_version.txt')
     if os.path.exists(version_file):
@@ -985,6 +1001,8 @@ group("native_theme_browser") {
     shutil.copy2(gn_bin, tp_gn)
     if sys.platform != 'win32':
         os.chmod(tp_gn, 0o755)
+
+    align_source_timestamps(src_dir, out_dir)
 
     print(f"Running gn gen using {gn_bin}...")
     run_cmd([gn_bin, 'gen', out_dir], cwd=src_dir, env=env)
