@@ -277,6 +277,7 @@ def main():
         'third_party/blink/common/features.cc',
         'components/optimization_guide/core/optimization_guide_features.cc',
         'media/media_options.gni',
+        'sandbox/win/src/sandbox_policy_base.cc',
     ]:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
@@ -1019,7 +1020,8 @@ group("native_theme_browser") {
         target = 'mini_installer'
 
     ninja_cmd = 'ninja.exe' if sys.platform == 'win32' else 'ninja'
-    run_cmd([ninja_cmd, '-C', out_dir, target], cwd=src_dir, env=env)
+    jobs = str(os.cpu_count() or 2)
+    run_cmd([ninja_cmd, '-j', jobs, '-C', out_dir, target], cwd=src_dir, env=env)
 
     print("Packaging...")
     if target_os == 'linux':
