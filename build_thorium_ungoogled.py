@@ -182,19 +182,20 @@ def main():
 
     # Ensure gclient sync runs for this version with minimal disk footprint
     gclient_cmd = 'gclient.bat' if sys.platform == 'win32' else 'gclient'
-    for attempt in range(1, 4):
+    for attempt in range(1, 6):
         try:
-            print(f"Running gclient sync (attempt {attempt}/3)...")
+            print(f"Running gclient sync (attempt {attempt}/5)...")
             if chromium_version:
                 run_cmd([gclient_cmd, 'sync', '-D', '--no-history', '--shallow', '--revision', f'src@{chromium_version}'], cwd=os.path.dirname(src_dir), env=env)
             else:
                 run_cmd([gclient_cmd, 'sync', '-D', '--no-history', '--shallow'], cwd=os.path.dirname(src_dir), env=env)
             break
         except Exception as e:
-            if attempt == 3:
+            if attempt == 5:
                 raise
-            print(f"gclient sync attempt {attempt} failed ({e}), waiting 30s before retrying...")
-            time.sleep(30)
+            sleep_time = attempt * 30
+            print(f"gclient sync attempt {attempt} failed ({e}), waiting {sleep_time}s before retrying...")
+            time.sleep(sleep_time)
 
     for attempt in range(1, 4):
         try:
@@ -304,6 +305,14 @@ def main():
         audio_ctx_overlay = os.path.join(thorium_src_overlay, 'third_party', 'blink', 'renderer', 'modules', 'webaudio', 'audio_context.cc')
         if os.path.exists(audio_ctx_overlay):
             os.remove(audio_ctx_overlay)
+        thorium_comp_dir = os.path.join(thorium_src_overlay, 'components')
+        if os.path.isdir(thorium_comp_dir):
+            for f in os.listdir(thorium_comp_dir):
+                if f.endswith('.grd') or f.endswith('.grdp'):
+                    try:
+                        os.remove(os.path.join(thorium_comp_dir, f))
+                    except OSError:
+                        pass
         print(f"Copying Thorium overlay from {thorium_src_overlay} to {src_dir}...")
         shutil.copytree(thorium_src_overlay, src_dir, dirs_exist_ok=True)
 
@@ -1006,10 +1015,11 @@ group("native_theme_browser") {
     with open(os.path.join(out_path, 'args.gn'), 'w') as f:
         f.write('\n'.join(gn_args))
 
-    # Remove stale cached gen/components/webui to ensure clean typescript compilation
+    # Remove stale cached gen/components to ensure clean grit and typescript compilation
     for stale_gen in [
         os.path.join(out_path, 'gen', 'components', 'webui', 'flags'),
         os.path.join(out_path, 'gen', 'components', 'webui', 'chrome_urls'),
+        os.path.join(out_path, 'gen', 'components', 'strings'),
     ]:
         if os.path.exists(stale_gen):
             print(f"Purging stale cached {stale_gen}...")
