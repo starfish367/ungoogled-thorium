@@ -86,11 +86,12 @@ def main():
     if not os.path.exists(thorium_dir):
         run_cmd(['git', 'clone', '--depth=1', 'https://github.com/Alex313031/Thorium.git', thorium_dir])
 
-    # Patch Thorium WebUI TypeScript files to fix mismatched method and property types
+    # Patch Thorium WebUI TypeScript and CSS files to fix mismatched types and stylelint errors
     for ts_rel, old_s, new_s in [
         (os.path.join('components', 'webui', 'flags', 'resources', 'app.html.ts'), 'onSelectedTabIndexChanged_', 'onTabsSelectedChanged_'),
         (os.path.join('components', 'webui', 'chrome_urls', 'resources', 'app.html.ts'), '${info.url.url}', '${info.url}'),
         (os.path.join('components', 'webui', 'chrome_urls', 'resources', 'app.html.ts'), '${url.url}', '${url}'),
+        (os.path.join('components', 'webui', 'version', 'resources', 'about_version.css'), 'max-width: auto;', 'max-width: none;'),
     ]:
         f_p = os.path.join(thorium_dir, 'src', ts_rel)
         if os.path.exists(f_p):
@@ -319,11 +320,12 @@ def main():
         print(f"Copying Thorium overlay from {thorium_src_overlay} to {src_dir}...")
         shutil.copytree(thorium_src_overlay, src_dir, dirs_exist_ok=True)
 
-    # Patch WebUI TypeScript files in src_dir as well
+    # Patch WebUI TypeScript and CSS files in src_dir as well
     for ts_rel, old_s, new_s in [
         (os.path.join('components', 'webui', 'flags', 'resources', 'app.html.ts'), 'onSelectedTabIndexChanged_', 'onTabsSelectedChanged_'),
         (os.path.join('components', 'webui', 'chrome_urls', 'resources', 'app.html.ts'), '${info.url.url}', '${info.url}'),
         (os.path.join('components', 'webui', 'chrome_urls', 'resources', 'app.html.ts'), '${url.url}', '${url}'),
+        (os.path.join('components', 'webui', 'version', 'resources', 'about_version.css'), 'max-width: auto;', 'max-width: none;'),
     ]:
         f_p = os.path.join(src_dir, ts_rel)
         if os.path.exists(f_p):
@@ -1022,6 +1024,7 @@ group("native_theme_browser") {
     for stale_gen in [
         os.path.join(out_path, 'gen', 'components', 'webui', 'flags'),
         os.path.join(out_path, 'gen', 'components', 'webui', 'chrome_urls'),
+        os.path.join(out_path, 'gen', 'components', 'webui', 'version'),
         os.path.join(out_path, 'gen', 'components', 'strings'),
         os.path.join(out_path, 'gen', 'components', 'search_engines'),
         os.path.join(out_path, 'gen', 'third_party', 'search_engines_data'),
