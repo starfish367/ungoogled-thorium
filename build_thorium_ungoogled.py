@@ -241,6 +241,35 @@ def main():
         with open(rust_version_file, 'w', encoding='utf-8') as f:
             f.write("rustc 1.88.0 (chromium)\n")
 
+    # Ensure base/containers/contains.h compatibility header exists for Thorium overlay
+    contains_header = os.path.join(src_dir, 'base', 'containers', 'contains.h')
+    if not os.path.exists(contains_header):
+        os.makedirs(os.path.dirname(contains_header), exist_ok=True)
+        with open(contains_header, 'w', encoding='utf-8') as f:
+            f.write('''// Compatibility header for Thorium overlay
+#ifndef BASE_CONTAINERS_CONTAINS_H_
+#define BASE_CONTAINERS_CONTAINS_H_
+
+#include <algorithm>
+#include <ranges>
+
+namespace base {
+
+template <typename Range, typename Value>
+constexpr bool Contains(const Range& range, const Value& value) {
+  if constexpr (requires { range.contains(value); }) {
+    return range.contains(value);
+  } else {
+    return std::ranges::contains(range, value);
+  }
+}
+
+}  // namespace base
+
+#endif  // BASE_CONTAINERS_CONTAINS_H_
+''')
+        print(f"Created compatibility header at {contains_header}")
+
     # Apply Thorium modifications
     print("Applying Thorium overlay and patches...")
     # Preserve Chromium's original root build configs and scripts so declarations and toolchains aren't broken
@@ -295,6 +324,7 @@ def main():
         'media/media_options.gni',
         'sandbox/win/src/sandbox_policy_base.cc',
         'components/variations/service/variations_service.cc',
+        'components/webui/flags/flags_state.cc',
     ]:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
@@ -306,6 +336,9 @@ def main():
         audio_ctx_overlay = os.path.join(thorium_src_overlay, 'third_party', 'blink', 'renderer', 'modules', 'webaudio', 'audio_context.cc')
         if os.path.exists(audio_ctx_overlay):
             os.remove(audio_ctx_overlay)
+        flags_state_overlay = os.path.join(thorium_src_overlay, 'components', 'webui', 'flags', 'flags_state.cc')
+        if os.path.exists(flags_state_overlay):
+            os.remove(flags_state_overlay)
         thorium_search_data = os.path.join(thorium_src_overlay, 'third_party', 'search_engines_data')
         if os.path.exists(thorium_search_data):
             shutil.rmtree(thorium_search_data, ignore_errors=True)
