@@ -82,10 +82,23 @@ def main():
     update_cmd = 'update_depot_tools.bat' if sys.platform == 'win32' else 'update_depot_tools'
     run_cmd([update_cmd], cwd=depot_tools_dir, env=env, shell=True)
 
-    # Download Thorium source
     thorium_dir = os.path.join(root_dir, 'Thorium')
     if not os.path.exists(thorium_dir):
         run_cmd(['git', 'clone', '--depth=1', 'https://github.com/Alex313031/Thorium.git', thorium_dir])
+
+    # Patch Thorium WebUI TypeScript files to fix mismatched method and property types
+    for ts_rel, old_s, new_s in [
+        (os.path.join('components', 'webui', 'flags', 'resources', 'app.html.ts'), 'onSelectedTabIndexChanged_', 'onTabsSelectedChanged_'),
+        (os.path.join('components', 'webui', 'chrome_urls', 'resources', 'app.html.ts'), '${info.url.url}', '${info.url}'),
+        (os.path.join('components', 'webui', 'chrome_urls', 'resources', 'app.html.ts'), '${url.url}', '${url}'),
+    ]:
+        f_p = os.path.join(thorium_dir, 'src', ts_rel)
+        if os.path.exists(f_p):
+            with open(f_p, 'r', encoding='utf-8') as f:
+                c = f.read()
+            if old_s in c:
+                with open(f_p, 'w', encoding='utf-8') as f:
+                    f.write(c.replace(old_s, new_s))
 
     # The actual chromium source ends up in src_dir/src
     actual_src_dir = os.path.join(src_dir, 'src')
@@ -279,8 +292,6 @@ def main():
         'media/media_options.gni',
         'sandbox/win/src/sandbox_policy_base.cc',
         'components/variations/service/variations_service.cc',
-        'components/webui/flags/resources/app.html.ts',
-        'components/webui/chrome_urls/resources/app.html.ts',
     ]:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
@@ -289,23 +300,22 @@ def main():
 
     thorium_src_overlay = os.path.join(thorium_dir, 'src')
     if os.path.exists(thorium_src_overlay):
-        for broken_file in [
-            'components/webui/flags/resources/app.html.ts',
-            'components/webui/chrome_urls/resources/app.html.ts',
-        ]:
-            overlay_file = os.path.join(thorium_src_overlay, broken_file)
-            if os.path.exists(overlay_file):
-                os.remove(overlay_file)
         print(f"Copying Thorium overlay from {thorium_src_overlay} to {src_dir}...")
         shutil.copytree(thorium_src_overlay, src_dir, dirs_exist_ok=True)
 
-    for broken_file in [
-        'components/webui/flags/resources/app.html.ts',
-        'components/webui/chrome_urls/resources/app.html.ts',
+    # Patch WebUI TypeScript files in src_dir as well
+    for ts_rel, old_s, new_s in [
+        (os.path.join('components', 'webui', 'flags', 'resources', 'app.html.ts'), 'onSelectedTabIndexChanged_', 'onTabsSelectedChanged_'),
+        (os.path.join('components', 'webui', 'chrome_urls', 'resources', 'app.html.ts'), '${info.url.url}', '${info.url}'),
+        (os.path.join('components', 'webui', 'chrome_urls', 'resources', 'app.html.ts'), '${url.url}', '${url}'),
     ]:
-        src_broken = os.path.join(src_dir, broken_file)
-        if os.path.exists(src_broken) and broken_file not in preserved_files:
-            os.remove(src_broken)
+        f_p = os.path.join(src_dir, ts_rel)
+        if os.path.exists(f_p):
+            with open(f_p, 'r', encoding='utf-8') as f:
+                c = f.read()
+            if old_s in c:
+                with open(f_p, 'w', encoding='utf-8') as f:
+                    f.write(c.replace(old_s, new_s))
 
     # Restore preserved files
     for rel_path, content in preserved_files.items():
@@ -991,6 +1001,15 @@ group("native_theme_browser") {
     os.makedirs(out_path, exist_ok=True)
     with open(os.path.join(out_path, 'args.gn'), 'w') as f:
         f.write('\n'.join(gn_args))
+
+    # Remove stale cached gen/components/webui to ensure clean typescript compilation
+    for stale_gen in [
+        os.path.join(out_path, 'gen', 'components', 'webui', 'flags'),
+        os.path.join(out_path, 'gen', 'components', 'webui', 'chrome_urls'),
+    ]:
+        if os.path.exists(stale_gen):
+            print(f"Purging stale cached {stale_gen}...")
+            shutil.rmtree(stale_gen, ignore_errors=True)
 
     print("Ensuring gn executable is available...")
     buildtools_platform = 'win' if sys.platform == 'win32' else 'linux64'
