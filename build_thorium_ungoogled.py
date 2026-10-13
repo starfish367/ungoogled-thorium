@@ -325,6 +325,7 @@ constexpr bool Contains(const Range& range, const Value& value) {
         'sandbox/win/src/sandbox_policy_base.cc',
         'components/variations/service/variations_service.cc',
         'components/webui/flags/flags_state.cc',
+        'services/preferences/tracked/tracked_split_preference.cc',
     ]:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
@@ -339,6 +340,9 @@ constexpr bool Contains(const Range& range, const Value& value) {
         flags_state_overlay = os.path.join(thorium_src_overlay, 'components', 'webui', 'flags', 'flags_state.cc')
         if os.path.exists(flags_state_overlay):
             os.remove(flags_state_overlay)
+        tsp_overlay = os.path.join(thorium_src_overlay, 'services', 'preferences', 'tracked', 'tracked_split_preference.cc')
+        if os.path.exists(tsp_overlay):
+            os.remove(tsp_overlay)
         thorium_search_data = os.path.join(thorium_src_overlay, 'third_party', 'search_engines_data')
         if os.path.exists(thorium_search_data):
             shutil.rmtree(thorium_search_data, ignore_errors=True)
