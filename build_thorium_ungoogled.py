@@ -326,6 +326,8 @@ constexpr bool Contains(const Range& range, const Value& value) {
         'components/variations/service/variations_service.cc',
         'components/webui/flags/flags_state.cc',
         'services/preferences/tracked/tracked_split_preference.cc',
+        'components/history/core/browser/history_backend.cc',
+        'components/history/core/browser/history_backend.h',
     ]:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
@@ -343,6 +345,9 @@ constexpr bool Contains(const Range& range, const Value& value) {
         tsp_overlay = os.path.join(thorium_src_overlay, 'services', 'preferences', 'tracked', 'tracked_split_preference.cc')
         if os.path.exists(tsp_overlay):
             os.remove(tsp_overlay)
+        thorium_history_dir = os.path.join(thorium_src_overlay, 'components', 'history')
+        if os.path.exists(thorium_history_dir):
+            shutil.rmtree(thorium_history_dir, ignore_errors=True)
         thorium_search_data = os.path.join(thorium_src_overlay, 'third_party', 'search_engines_data')
         if os.path.exists(thorium_search_data):
             shutil.rmtree(thorium_search_data, ignore_errors=True)
