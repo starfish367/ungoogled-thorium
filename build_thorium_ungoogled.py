@@ -305,6 +305,9 @@ def main():
         audio_ctx_overlay = os.path.join(thorium_src_overlay, 'third_party', 'blink', 'renderer', 'modules', 'webaudio', 'audio_context.cc')
         if os.path.exists(audio_ctx_overlay):
             os.remove(audio_ctx_overlay)
+        thorium_search_data = os.path.join(thorium_src_overlay, 'third_party', 'search_engines_data')
+        if os.path.exists(thorium_search_data):
+            shutil.rmtree(thorium_search_data, ignore_errors=True)
         thorium_comp_dir = os.path.join(thorium_src_overlay, 'components')
         if os.path.isdir(thorium_comp_dir):
             for f in os.listdir(thorium_comp_dir):
@@ -1015,11 +1018,13 @@ group("native_theme_browser") {
     with open(os.path.join(out_path, 'args.gn'), 'w') as f:
         f.write('\n'.join(gn_args))
 
-    # Remove stale cached gen/components to ensure clean grit and typescript compilation
+    # Remove stale cached gen/components to ensure clean grit, prepopulated search engines, and typescript compilation
     for stale_gen in [
         os.path.join(out_path, 'gen', 'components', 'webui', 'flags'),
         os.path.join(out_path, 'gen', 'components', 'webui', 'chrome_urls'),
         os.path.join(out_path, 'gen', 'components', 'strings'),
+        os.path.join(out_path, 'gen', 'components', 'search_engines'),
+        os.path.join(out_path, 'gen', 'third_party', 'search_engines_data'),
     ]:
         if os.path.exists(stale_gen):
             print(f"Purging stale cached {stale_gen}...")
