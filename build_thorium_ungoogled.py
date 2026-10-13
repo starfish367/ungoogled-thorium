@@ -289,8 +289,23 @@ def main():
 
     thorium_src_overlay = os.path.join(thorium_dir, 'src')
     if os.path.exists(thorium_src_overlay):
+        for broken_file in [
+            'components/webui/flags/resources/app.html.ts',
+            'components/webui/chrome_urls/resources/app.html.ts',
+        ]:
+            overlay_file = os.path.join(thorium_src_overlay, broken_file)
+            if os.path.exists(overlay_file):
+                os.remove(overlay_file)
         print(f"Copying Thorium overlay from {thorium_src_overlay} to {src_dir}...")
         shutil.copytree(thorium_src_overlay, src_dir, dirs_exist_ok=True)
+
+    for broken_file in [
+        'components/webui/flags/resources/app.html.ts',
+        'components/webui/chrome_urls/resources/app.html.ts',
+    ]:
+        src_broken = os.path.join(src_dir, broken_file)
+        if os.path.exists(src_broken) and broken_file not in preserved_files:
+            os.remove(src_broken)
 
     # Restore preserved files
     for rel_path, content in preserved_files.items():
