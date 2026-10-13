@@ -288,6 +288,7 @@ def main():
         'media/filters/ffmpeg_glue.cc',
         'media/filters/ffmpeg_video_decoder.cc',
         'third_party/blink/common/features.cc',
+        'third_party/blink/renderer/modules/webaudio/audio_context.cc',
         'components/optimization_guide/core/optimization_guide_features.cc',
         'media/media_options.gni',
         'sandbox/win/src/sandbox_policy_base.cc',
@@ -300,6 +301,9 @@ def main():
 
     thorium_src_overlay = os.path.join(thorium_dir, 'src')
     if os.path.exists(thorium_src_overlay):
+        audio_ctx_overlay = os.path.join(thorium_src_overlay, 'third_party', 'blink', 'renderer', 'modules', 'webaudio', 'audio_context.cc')
+        if os.path.exists(audio_ctx_overlay):
+            os.remove(audio_ctx_overlay)
         print(f"Copying Thorium overlay from {thorium_src_overlay} to {src_dir}...")
         shutil.copytree(thorium_src_overlay, src_dir, dirs_exist_ok=True)
 
