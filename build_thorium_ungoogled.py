@@ -279,6 +279,8 @@ def main():
         'media/media_options.gni',
         'sandbox/win/src/sandbox_policy_base.cc',
         'components/variations/service/variations_service.cc',
+        'components/webui/flags/resources/app.html.ts',
+        'components/webui/chrome_urls/resources/app.html.ts',
     ]:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
