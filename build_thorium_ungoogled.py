@@ -332,6 +332,8 @@ constexpr bool Contains(const Range& range, const Value& value) {
         'components/download/internal/common/base_file.cc',
         'content/public/common/url_utils.cc',
         'chrome/browser/ui/toolbar/chrome_location_bar_model_delegate.cc',
+        'content/browser/file_system_access/file_system_access_safe_move_helper.cc',
+        'content/browser/file_system_access/file_system_access_safe_move_helper.h',
     ]:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
@@ -360,6 +362,9 @@ constexpr bool Contains(const Range& range, const Value& value) {
             rm_p = os.path.join(thorium_src_overlay, 'components', comp_rm)
             if os.path.exists(rm_p):
                 shutil.rmtree(rm_p, ignore_errors=True)
+        thorium_content_browser = os.path.join(thorium_src_overlay, 'content', 'browser')
+        if os.path.exists(thorium_content_browser):
+            shutil.rmtree(thorium_content_browser, ignore_errors=True)
         thorium_search_data = os.path.join(thorium_src_overlay, 'third_party', 'search_engines_data')
         if os.path.exists(thorium_search_data):
             shutil.rmtree(thorium_search_data, ignore_errors=True)
