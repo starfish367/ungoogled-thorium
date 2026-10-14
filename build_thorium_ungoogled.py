@@ -330,6 +330,8 @@ constexpr bool Contains(const Range& range, const Value& value) {
         'components/history/core/browser/history_backend.h',
         'components/bookmarks/browser/bookmark_utils.cc',
         'components/download/internal/common/base_file.cc',
+        'content/public/common/url_utils.cc',
+        'chrome/browser/ui/toolbar/chrome_location_bar_model_delegate.cc',
     ]:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
@@ -347,6 +349,13 @@ constexpr bool Contains(const Range& range, const Value& value) {
         tsp_overlay = os.path.join(thorium_src_overlay, 'services', 'preferences', 'tracked', 'tracked_split_preference.cc')
         if os.path.exists(tsp_overlay):
             os.remove(tsp_overlay)
+        for rm_rel in [
+            'content/public/common/url_utils.cc',
+            'chrome/browser/ui/toolbar/chrome_location_bar_model_delegate.cc',
+        ]:
+            rm_p = os.path.join(thorium_src_overlay, *rm_rel.split('/'))
+            if os.path.exists(rm_p):
+                os.remove(rm_p)
         for comp_rm in ['history', 'bookmarks', 'download', 'omnibox', 'user_education']:
             rm_p = os.path.join(thorium_src_overlay, 'components', comp_rm)
             if os.path.exists(rm_p):
