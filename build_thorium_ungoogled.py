@@ -335,6 +335,7 @@ constexpr bool Contains(const Range& range, const Value& value) {
         'content/browser/file_system_access/file_system_access_safe_move_helper.cc',
         'content/browser/file_system_access/file_system_access_safe_move_helper.h',
         'chrome/app/generated_resources.grd',
+        'chrome/install_static/chromium_install_modes.h',
     ]:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
@@ -367,6 +368,9 @@ constexpr bool Contains(const Range& range, const Value& value) {
         thorium_content_browser = os.path.join(thorium_src_overlay, 'content', 'browser')
         if os.path.exists(thorium_content_browser):
             shutil.rmtree(thorium_content_browser, ignore_errors=True)
+        thorium_install_static = os.path.join(thorium_src_overlay, 'chrome', 'install_static')
+        if os.path.exists(thorium_install_static):
+            shutil.rmtree(thorium_install_static, ignore_errors=True)
         thorium_search_data = os.path.join(thorium_src_overlay, 'third_party', 'search_engines_data')
         if os.path.exists(thorium_search_data):
             shutil.rmtree(thorium_search_data, ignore_errors=True)
@@ -380,6 +384,13 @@ constexpr bool Contains(const Range& range, const Value& value) {
                         pass
         print(f"Copying Thorium overlay from {thorium_src_overlay} to {src_dir}...")
         shutil.copytree(thorium_src_overlay, src_dir, dirs_exist_ok=True)
+
+    obsolete_install_modes_cc = os.path.join(src_dir, 'chrome', 'install_static', 'chromium_install_modes.cc')
+    if os.path.exists(obsolete_install_modes_cc):
+        try:
+            os.remove(obsolete_install_modes_cc)
+        except OSError:
+            pass
 
     # Patch WebUI TypeScript and CSS files in src_dir as well
     for ts_rel, old_s, new_s in [
@@ -597,6 +608,14 @@ BASE_FEATURE(kWebAudioRemoveAudioDestinationResampler,
                         '<messages fallback_to_english="true">',
                         '<messages fallback_to_english="true">\n      <part file="thorium_strings.grdp" />'
                     )
+        elif rel_path == 'chrome/install_static/chromium_install_modes.h':
+            content = content.replace('kProductPathName[] = L"Chromium";', 'kProductPathName[] = L"Thorium";')
+            content = content.replace('.base_app_name = L"Chromium"', '.base_app_name = L"Thorium"')
+            content = content.replace('.base_app_id = L"Chromium"', '.base_app_id = L"Thorium"')
+            content = content.replace('.browser_prog_id_prefix = L"ChromiumHTM"', '.browser_prog_id_prefix = L"ThoriumHTM"')
+            content = content.replace('L"Chromium HTML Document"', 'L"Thorium HTML Document"')
+            content = content.replace('.pdf_prog_id_prefix = L"ChromiumPDF"', '.pdf_prog_id_prefix = L"ThoriumPDF"')
+            content = content.replace('L"Chromium PDF Document"', 'L"Thorium PDF Document"')
         elif rel_path == 'build/config/compiler/BUILD.gn':
             if 'thorium_simd_optimization' not in content:
                 content += '''
