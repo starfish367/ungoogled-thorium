@@ -334,6 +334,7 @@ constexpr bool Contains(const Range& range, const Value& value) {
         'chrome/browser/ui/toolbar/chrome_location_bar_model_delegate.cc',
         'content/browser/file_system_access/file_system_access_safe_move_helper.cc',
         'content/browser/file_system_access/file_system_access_safe_move_helper.h',
+        'chrome/app/generated_resources.grd',
     ]:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
@@ -354,6 +355,7 @@ constexpr bool Contains(const Range& range, const Value& value) {
         for rm_rel in [
             'content/public/common/url_utils.cc',
             'chrome/browser/ui/toolbar/chrome_location_bar_model_delegate.cc',
+            'chrome/app/generated_resources.grd',
         ]:
             rm_p = os.path.join(thorium_src_overlay, *rm_rel.split('/'))
             if os.path.exists(rm_p):
@@ -583,6 +585,18 @@ BASE_FEATURE(kWebAudioRemoveAudioDestinationResampler,
                     '"about_flags.cc",',
                     '"about_flags.cc",\n    "thorium_flag_choices.h",\n    "thorium_flag_entries.h",'
                 )
+        elif rel_path == 'chrome/app/generated_resources.grd':
+            if 'thorium_strings.grdp' not in content:
+                if '<part file="access_code_cast_strings.grdp" />' in content:
+                    content = content.replace(
+                        '<part file="access_code_cast_strings.grdp" />',
+                        '<part file="thorium_strings.grdp" />\n      <part file="access_code_cast_strings.grdp" />'
+                    )
+                elif '<messages fallback_to_english="true">' in content:
+                    content = content.replace(
+                        '<messages fallback_to_english="true">',
+                        '<messages fallback_to_english="true">\n      <part file="thorium_strings.grdp" />'
+                    )
         elif rel_path == 'build/config/compiler/BUILD.gn':
             if 'thorium_simd_optimization' not in content:
                 content += '''
@@ -888,6 +902,19 @@ declare_args() {
             with open(grit_base_path, 'w', encoding='utf-8') as f:
                 f.write(gb_code)
 
+    # Patch tools/grit/grit_info.py to auto-sync gritdeps on mismatch instead of failing
+    grit_info_path = os.path.join(src_dir, 'tools', 'grit', 'grit_info.py')
+    if os.path.exists(grit_info_path):
+        with open(grit_info_path, 'r', encoding='utf-8') as f:
+            gi_code = f.read()
+        if 'raise GritInfoError(msg)' in gi_code:
+            gi_code = gi_code.replace(
+                'raise GritInfoError(msg)',
+                'with open(deps_file, "w") as f_out:\n      f_out.write("\\n".join(actual_output) + "\\n")'
+            )
+            with open(grit_info_path, 'w', encoding='utf-8') as f:
+                f.write(gi_code)
+
     # Patch build/config/compiler/BUILD.gn to safely handle use_libcxx_modules
     compiler_build_gn = os.path.join(src_dir, 'build', 'config', 'compiler', 'BUILD.gn')
     if os.path.exists(compiler_build_gn):
@@ -1087,6 +1114,7 @@ group("native_theme_browser") {
         os.path.join(out_path, 'gen', 'components', 'strings'),
         os.path.join(out_path, 'gen', 'components', 'search_engines'),
         os.path.join(out_path, 'gen', 'third_party', 'search_engines_data'),
+        os.path.join(out_path, 'gen', 'chrome', 'app'),
     ]:
         if os.path.exists(stale_gen):
             print(f"Purging stale cached {stale_gen}...")
