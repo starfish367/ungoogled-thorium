@@ -335,6 +335,7 @@ constexpr bool Contains(const Range& range, const Value& value) {
         'content/browser/file_system_access/file_system_access_safe_move_helper.cc',
         'content/browser/file_system_access/file_system_access_safe_move_helper.h',
         'chrome/app/generated_resources.grd',
+        'chrome/app/theme/theme_resources.grd',
         'chrome/install_static/chromium_install_modes.h',
     ]:
         full_path = os.path.join(src_dir, rel_path)
@@ -357,6 +358,7 @@ constexpr bool Contains(const Range& range, const Value& value) {
             'content/public/common/url_utils.cc',
             'chrome/browser/ui/toolbar/chrome_location_bar_model_delegate.cc',
             'chrome/app/generated_resources.grd',
+            'chrome/app/theme/theme_resources.grd',
         ]:
             rm_p = os.path.join(thorium_src_overlay, *rm_rel.split('/'))
             if os.path.exists(rm_p):
@@ -612,6 +614,29 @@ BASE_FEATURE(kWebAudioRemoveAudioDestinationResampler,
                         '<messages fallback_to_english="true">',
                         '<messages fallback_to_english="true">\n      <part file="thorium_strings.grdp" />'
                     )
+        elif rel_path == 'chrome/app/theme/theme_resources.grd':
+            if 'IDR_PRODUCT_MASCOT' not in content:
+                mascot_entries = '''
+              <structure type="chrome_scaled_image" name="IDR_PRODUCT_MASCOT" file="chromium/thorium_mascot.png" />
+              <structure type="chrome_scaled_image" name="IDR_PRODUCT_NETERROR_FAVICON" file="chromium/dino_favicon.png" />
+              <structure type="chrome_scaled_image" name="IDR_PRODUCT_ROBOT" file="chromium/technical_error.png" />
+              <structure type="chrome_scaled_image" name="IDR_PRODUCT_AI_CHROME" file="chromium/ai_chrome.png" />
+              <structure type="chrome_scaled_image" name="IDR_PRODUCT_CHROMIUM_BLANK" file="chromium/chromium_blank.png" />
+              <structure type="chrome_scaled_image" name="IDR_PRODUCT_CHROMIUM_QUESTION" file="chromium/chromium_question.png" />
+              <structure type="chrome_scaled_image" name="IDR_PRODUCT_THORIUM_ATOMIC" file="chromium/thorium_atomic.png" />
+              <structure type="chrome_scaled_image" name="IDR_PRODUCT_THORIUM_ELEMENT" file="chromium/thorium_element.png" />
+              <structure type="chrome_scaled_image" name="IDR_PRODUCT_THORIUM_GUY" file="chromium/thorium_guy.png" />'''
+                matched = False
+                for target_token in [
+                    'file="${branding_path_component}/product_logo_name_22_white.png" />',
+                    'file="chromium/product_logo_name_22_white.png" />',
+                ]:
+                    if target_token in content:
+                        content = content.replace(target_token, target_token + mascot_entries, 1)
+                        matched = True
+                        break
+                if not matched and '</structures>' in content:
+                    content = content.replace('</structures>', mascot_entries + '\n    </structures>', 1)
         elif rel_path == 'chrome/install_static/chromium_install_modes.h':
             content = content.replace('kProductPathName[] = L"Chromium";', 'kProductPathName[] = L"Thorium";')
             content = content.replace('.base_app_name = L"Chromium"', '.base_app_name = L"Thorium"')
@@ -1156,6 +1181,7 @@ group("native_theme_browser") {
         os.path.join(out_path, 'gen', 'components', 'search_engines'),
         os.path.join(out_path, 'gen', 'third_party', 'search_engines_data'),
         os.path.join(out_path, 'gen', 'chrome', 'app'),
+        os.path.join(out_path, 'gen', 'chrome', 'app', 'theme'),
         os.path.join(out_path, 'gen', 'chrome', 'browser', 'resources', 'components'),
     ]:
         if os.path.exists(stale_gen):
