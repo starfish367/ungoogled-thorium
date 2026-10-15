@@ -334,6 +334,7 @@ constexpr bool Contains(const Range& range, const Value& value) {
         'chrome/browser/ui/toolbar/chrome_location_bar_model_delegate.cc',
         'content/browser/file_system_access/file_system_access_safe_move_helper.cc',
         'content/browser/file_system_access/file_system_access_safe_move_helper.h',
+        'content/common/gpu_pre_sandbox_hook_linux.cc',
         'chrome/app/generated_resources.grd',
         'chrome/app/theme/theme_resources.grd',
         'chrome/install_static/chromium_install_modes.h',
@@ -345,6 +346,9 @@ constexpr bool Contains(const Range& range, const Value& value) {
 
     thorium_src_overlay = os.path.join(thorium_dir, 'src')
     if os.path.exists(thorium_src_overlay):
+        gpu_hook_overlay = os.path.join(thorium_src_overlay, 'content', 'common', 'gpu_pre_sandbox_hook_linux.cc')
+        if os.path.exists(gpu_hook_overlay):
+            os.remove(gpu_hook_overlay)
         audio_ctx_overlay = os.path.join(thorium_src_overlay, 'third_party', 'blink', 'renderer', 'modules', 'webaudio', 'audio_context.cc')
         if os.path.exists(audio_ctx_overlay):
             os.remove(audio_ctx_overlay)
