@@ -339,6 +339,8 @@ constexpr bool Contains(const Range& range, const Value& value) {
         'chrome/app/theme/theme_resources.grd',
         'chrome/install_static/chromium_install_modes.h',
         'extensions/common/extension.cc',
+        'extensions/browser/extension_prefs.cc',
+        'extensions/browser/ui_util.cc',
     ]:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
@@ -365,6 +367,8 @@ constexpr bool Contains(const Range& range, const Value& value) {
             'chrome/app/generated_resources.grd',
             'chrome/app/theme/theme_resources.grd',
             'extensions/common/extension.cc',
+            'extensions/browser/extension_prefs.cc',
+            'extensions/browser/ui_util.cc',
         ]:
             rm_p = os.path.join(thorium_src_overlay, *rm_rel.split('/'))
             if os.path.exists(rm_p):
@@ -379,6 +383,9 @@ constexpr bool Contains(const Range& range, const Value& value) {
         thorium_install_static = os.path.join(thorium_src_overlay, 'chrome', 'install_static')
         if os.path.exists(thorium_install_static):
             shutil.rmtree(thorium_install_static, ignore_errors=True)
+        thorium_extensions = os.path.join(thorium_src_overlay, 'extensions')
+        if os.path.exists(thorium_extensions):
+            shutil.rmtree(thorium_extensions, ignore_errors=True)
         thorium_search_data = os.path.join(thorium_src_overlay, 'third_party', 'search_engines_data')
         if os.path.exists(thorium_search_data):
             shutil.rmtree(thorium_search_data, ignore_errors=True)
@@ -1288,10 +1295,11 @@ group("native_theme_browser") {
                 f.write('''#!/bin/sh
 HERE=$(dirname $(readlink -f "${0}"))
 export LD_LIBRARY_PATH="${HERE}"/usr/lib:"${HERE}":$LD_LIBRARY_PATH
+export MESA_GLES_VERSION_OVERRIDE=3.0
 if [ -x "${HERE}"/thorium ]; then
-  exec "${HERE}"/thorium --no-default-browser-check "$@"
+  exec "${HERE}"/thorium --ignore-gpu-blocklist --enable-gpu-rasterization --no-default-browser-check "$@"
 elif [ -x "${HERE}"/chrome ]; then
-  exec "${HERE}"/chrome --no-default-browser-check "$@"
+  exec "${HERE}"/chrome --ignore-gpu-blocklist --enable-gpu-rasterization --no-default-browser-check "$@"
 else
   echo "Error: Thorium/Chrome binary not found in AppImage" >&2
   exit 1
