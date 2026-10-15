@@ -611,6 +611,12 @@ BASE_FEATURE(kWebAudioRemoveAudioDestinationResampler,
              "WebAudioRemoveAudioDestinationResampler",
              base::FEATURE_DISABLED_BY_DEFAULT);
 '''
+        elif rel_path == 'chrome/browser/ui/tabs/features.cc':
+            if 'features::IsTabSearchMoving()' in content:
+                content = content.replace(
+                    'if (features::IsTabSearchMoving()) {\n    return false;\n  }',
+                    '// if (features::IsTabSearchMoving()) {\n  //   return false;\n  // }'
+                )
         elif rel_path == 'chrome/browser/BUILD.gn':
             if 'thorium_flag_choices.h' not in content and '"about_flags.cc",' in content:
                 content = content.replace(
