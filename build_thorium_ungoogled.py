@@ -338,6 +338,7 @@ constexpr bool Contains(const Range& range, const Value& value) {
         'chrome/app/generated_resources.grd',
         'chrome/app/theme/theme_resources.grd',
         'chrome/install_static/chromium_install_modes.h',
+        'extensions/common/extension.cc',
     ]:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
@@ -363,6 +364,7 @@ constexpr bool Contains(const Range& range, const Value& value) {
             'chrome/browser/ui/toolbar/chrome_location_bar_model_delegate.cc',
             'chrome/app/generated_resources.grd',
             'chrome/app/theme/theme_resources.grd',
+            'extensions/common/extension.cc',
         ]:
             rm_p = os.path.join(thorium_src_overlay, *rm_rel.split('/'))
             if os.path.exists(rm_p):
