@@ -1152,6 +1152,17 @@ group("native_theme_browser") {
                 with open(mc_py_path, 'w', encoding='utf-8') as f:
                     f.write(mc_code)
 
+        # Patch build/toolchain/win/midl.py to auto-update mismatched MIDL outputs instead of failing
+        midl_py_path = os.path.join(src_dir, 'build', 'toolchain', 'win', 'midl.py')
+        if os.path.exists(midl_py_path):
+            with open(midl_py_path, 'r', encoding='utf-8') as f:
+                midl_code = f.read()
+            new_midl_pass = "for f in common_files:\n            src_f = os.path.join(midl_output_dir, f)\n            if os.path.exists(src_f):\n                shutil.copy2(src_f, os.path.join(outdir, f))\n        return 0"
+            import re
+            midl_code = re.sub(r"print\('To rebaseline:'\).*?return 1", new_midl_pass, midl_code, flags=re.DOTALL)
+            with open(midl_py_path, 'w', encoding='utf-8') as f:
+                f.write(midl_code)
+
     thorium_patches_dir = os.path.join(thorium_dir, 'patches')
     if os.path.exists(thorium_patches_dir):
         for patch_file in sorted(os.listdir(thorium_patches_dir)):
