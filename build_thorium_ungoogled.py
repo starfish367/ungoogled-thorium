@@ -421,6 +421,37 @@ constexpr bool Contains(const Range& range, const Value& value) {
                 with open(tab_feat_cc, 'w', encoding='utf-8') as f:
                     f.write(c)
 
+    # Create forwarding headers for browser_navigator.h and browser_navigator_params.h (moved to ui/navigator/ in M154)
+    ui_dir = os.path.join(src_dir, 'chrome', 'browser', 'ui')
+    if os.path.exists(ui_dir):
+        bnp_h = os.path.join(ui_dir, 'browser_navigator_params.h')
+        if not os.path.exists(bnp_h):
+            with open(bnp_h, 'w', encoding='utf-8') as f:
+                f.write('#ifndef CHROME_BROWSER_UI_BROWSER_NAVIGATOR_PARAMS_H_\n#define CHROME_BROWSER_UI_BROWSER_NAVIGATOR_PARAMS_H_\n#include "chrome/browser/ui/navigator/browser_navigator_params.h"\n#endif  // CHROME_BROWSER_UI_BROWSER_NAVIGATOR_PARAMS_H_\n')
+        bn_h = os.path.join(ui_dir, 'browser_navigator.h')
+        if not os.path.exists(bn_h):
+            with open(bn_h, 'w', encoding='utf-8') as f:
+                f.write('#ifndef CHROME_BROWSER_UI_BROWSER_NAVIGATOR_H_\n#define CHROME_BROWSER_UI_BROWSER_NAVIGATOR_H_\n#include "chrome/browser/ui/navigator/browser_navigator.h"\n#endif  // CHROME_BROWSER_UI_BROWSER_NAVIGATOR_H_\n')
+
+    # Also replace obsolete includes in thorium overlay and src_dir
+    for base_p in [thorium_src_overlay, src_dir]:
+        for rel_nav in [
+            os.path.join('chrome', 'browser', 'ui', 'browser.h'),
+            os.path.join('chrome', 'browser', 'ui', 'browser.cc'),
+            os.path.join('chrome', 'browser', 'ui', 'browser_commands.cc'),
+            os.path.join('chrome', 'browser', 'chrome_content_browser_client.cc'),
+            os.path.join('chrome', 'browser', 'about_flags.cc'),
+            os.path.join('chrome', 'browser', 'ui', 'views', 'frame', 'browser_root_view.cc'),
+        ]:
+            f_p = os.path.join(base_p, rel_nav)
+            if os.path.exists(f_p):
+                with open(f_p, 'r', encoding='utf-8') as f:
+                    c = f.read()
+                c = c.replace('"chrome/browser/ui/browser_navigator_params.h"', '"chrome/browser/ui/navigator/browser_navigator_params.h"')
+                c = c.replace('"chrome/browser/ui/browser_navigator.h"', '"chrome/browser/ui/navigator/browser_navigator.h"')
+                with open(f_p, 'w', encoding='utf-8') as f:
+                    f.write(c)
+
     obsolete_install_modes_cc = os.path.join(src_dir, 'chrome', 'install_static', 'chromium_install_modes.cc')
     if os.path.exists(obsolete_install_modes_cc):
         try:
