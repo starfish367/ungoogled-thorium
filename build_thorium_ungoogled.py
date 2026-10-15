@@ -346,6 +346,14 @@ constexpr bool Contains(const Range& range, const Value& value) {
         'extensions/browser/extension_prefs.cc',
         'extensions/browser/ui_util.cc',
         'chrome/browser/ui/ui_features.cc',
+        'chrome/browser/ui/browser.cc',
+        'chrome/browser/ui/browser.h',
+        'chrome/browser/ui/browser_commands.cc',
+        'chrome/browser/ui/browser_ui_prefs.cc',
+        'chrome/browser/ui/tabs/tab_strip_model.cc',
+        'chrome/browser/ui/toolbar/app_menu_model.cc',
+        'chrome/browser/ui/views/tabs/tab_strip.cc',
+        'chrome/browser/ui/startup/infobar_utils.cc',
     ]:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
@@ -379,6 +387,14 @@ constexpr bool Contains(const Range& range, const Value& value) {
             'extensions/browser/extension_prefs.cc',
             'extensions/browser/ui_util.cc',
             'chrome/browser/ui/ui_features.cc',
+            'chrome/browser/ui/browser.cc',
+            'chrome/browser/ui/browser.h',
+            'chrome/browser/ui/browser_commands.cc',
+            'chrome/browser/ui/browser_ui_prefs.cc',
+            'chrome/browser/ui/tabs/tab_strip_model.cc',
+            'chrome/browser/ui/toolbar/app_menu_model.cc',
+            'chrome/browser/ui/views/tabs/tab_strip.cc',
+            'chrome/browser/ui/startup/infobar_utils.cc',
         ]:
             rm_p = os.path.join(thorium_src_overlay, *rm_rel.split('/'))
             if os.path.exists(rm_p):
