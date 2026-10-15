@@ -402,6 +402,17 @@ constexpr bool Contains(const Range& range, const Value& value) {
         print(f"Copying Thorium overlay from {thorium_src_overlay} to {src_dir}...")
         shutil.copytree(thorium_src_overlay, src_dir, dirs_exist_ok=True)
 
+    # Patch Thorium features.cc where IsTabSearchMoving() was removed in Chromium 154
+    for base_p in [thorium_src_overlay, src_dir]:
+        tab_feat_cc = os.path.join(base_p, 'chrome', 'browser', 'ui', 'tabs', 'features.cc')
+        if os.path.exists(tab_feat_cc):
+            with open(tab_feat_cc, 'r', encoding='utf-8') as f:
+                c = f.read()
+            if 'features::IsTabSearchMoving()' in c:
+                c = c.replace('features::IsTabSearchMoving()', 'false')
+                with open(tab_feat_cc, 'w', encoding='utf-8') as f:
+                    f.write(c)
+
     obsolete_install_modes_cc = os.path.join(src_dir, 'chrome', 'install_static', 'chromium_install_modes.cc')
     if os.path.exists(obsolete_install_modes_cc):
         try:
@@ -611,12 +622,6 @@ BASE_FEATURE(kWebAudioRemoveAudioDestinationResampler,
              "WebAudioRemoveAudioDestinationResampler",
              base::FEATURE_DISABLED_BY_DEFAULT);
 '''
-        elif rel_path == 'chrome/browser/ui/tabs/features.cc':
-            if 'features::IsTabSearchMoving()' in content:
-                content = content.replace(
-                    'if (features::IsTabSearchMoving()) {\n    return false;\n  }',
-                    '// if (features::IsTabSearchMoving()) {\n  //   return false;\n  // }'
-                )
         elif rel_path == 'chrome/browser/BUILD.gn':
             if 'thorium_flag_choices.h' not in content and '"about_flags.cc",' in content:
                 content = content.replace(
