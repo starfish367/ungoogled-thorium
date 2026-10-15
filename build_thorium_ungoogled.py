@@ -341,6 +341,7 @@ constexpr bool Contains(const Range& range, const Value& value) {
         'extensions/common/extension.cc',
         'extensions/browser/extension_prefs.cc',
         'extensions/browser/ui_util.cc',
+        'chrome/browser/ui/ui_features.cc',
     ]:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
@@ -369,6 +370,7 @@ constexpr bool Contains(const Range& range, const Value& value) {
             'extensions/common/extension.cc',
             'extensions/browser/extension_prefs.cc',
             'extensions/browser/ui_util.cc',
+            'chrome/browser/ui/ui_features.cc',
         ]:
             rm_p = os.path.join(thorium_src_overlay, *rm_rel.split('/'))
             if os.path.exists(rm_p):
