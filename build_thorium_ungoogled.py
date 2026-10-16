@@ -354,6 +354,8 @@ constexpr bool Contains(const Range& range, const Value& value) {
         'chrome/browser/ui/toolbar/app_menu_model.cc',
         'chrome/browser/ui/views/tabs/tab_strip.cc',
         'chrome/browser/ui/startup/infobar_utils.cc',
+        'chrome/browser/ui/views/frame/browser_root_view.h',
+        'chrome/browser/ui/views/frame/browser_root_view.cc',
     ]:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
@@ -395,6 +397,8 @@ constexpr bool Contains(const Range& range, const Value& value) {
             'chrome/browser/ui/toolbar/app_menu_model.cc',
             'chrome/browser/ui/views/tabs/tab_strip.cc',
             'chrome/browser/ui/startup/infobar_utils.cc',
+            'chrome/browser/ui/views/frame/browser_root_view.h',
+            'chrome/browser/ui/views/frame/browser_root_view.cc',
         ]:
             rm_p = os.path.join(thorium_src_overlay, *rm_rel.split('/'))
             if os.path.exists(rm_p):
