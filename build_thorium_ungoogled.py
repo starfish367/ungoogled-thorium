@@ -453,6 +453,23 @@ constexpr bool Contains(const Range& range, const Value& value) {
             with open(bn_h, 'w', encoding='utf-8') as f:
                 f.write('#ifndef CHROME_BROWSER_UI_BROWSER_NAVIGATOR_H_\n#define CHROME_BROWSER_UI_BROWSER_NAVIGATOR_H_\n#include "chrome/browser/ui/navigator/browser_navigator.h"\n#endif  // CHROME_BROWSER_UI_BROWSER_NAVIGATOR_H_\n')
 
+    # Create forwarding header for mica_titlebar.h if missing
+    win_dir = os.path.join(src_dir, 'chrome', 'browser', 'win')
+    os.makedirs(win_dir, exist_ok=True)
+    mica_h = os.path.join(win_dir, 'mica_titlebar.h')
+    if not os.path.exists(mica_h):
+        with open(mica_h, 'w', encoding='utf-8') as f:
+            f.write('#ifndef CHROME_BROWSER_WIN_MICA_TITLEBAR_H_
+#define CHROME_BROWSER_WIN_MICA_TITLEBAR_H_
+
+class MicaTitlebar {
+ public:
+  static bool IsMicaEnabled() { return false; }
+};
+
+#endif  // CHROME_BROWSER_WIN_MICA_TITLEBAR_H_
+')
+
     # Also replace obsolete includes in thorium overlay and src_dir
     for base_p in [thorium_src_overlay, src_dir]:
         for rel_nav in [
