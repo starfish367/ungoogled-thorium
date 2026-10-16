@@ -356,6 +356,7 @@ constexpr bool Contains(const Range& range, const Value& value) {
         'chrome/browser/ui/startup/infobar_utils.cc',
         'chrome/browser/ui/views/frame/browser_root_view.h',
         'chrome/browser/ui/views/frame/browser_root_view.cc',
+        'chrome/browser/themes/theme_helper_win.cc',
     ]:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
@@ -399,6 +400,7 @@ constexpr bool Contains(const Range& range, const Value& value) {
             'chrome/browser/ui/startup/infobar_utils.cc',
             'chrome/browser/ui/views/frame/browser_root_view.h',
             'chrome/browser/ui/views/frame/browser_root_view.cc',
+            'chrome/browser/themes/theme_helper_win.cc',
         ]:
             rm_p = os.path.join(thorium_src_overlay, *rm_rel.split('/'))
             if os.path.exists(rm_p):
@@ -459,7 +461,7 @@ constexpr bool Contains(const Range& range, const Value& value) {
     mica_h = os.path.join(win_dir, 'mica_titlebar.h')
     if not os.path.exists(mica_h):
         with open(mica_h, 'w', encoding='utf-8') as f:
-            f.write('#ifndef CHROME_BROWSER_WIN_MICA_TITLEBAR_H_
+            f.write('''#ifndef CHROME_BROWSER_WIN_MICA_TITLEBAR_H_
 #define CHROME_BROWSER_WIN_MICA_TITLEBAR_H_
 
 class MicaTitlebar {
@@ -468,7 +470,7 @@ class MicaTitlebar {
 };
 
 #endif  // CHROME_BROWSER_WIN_MICA_TITLEBAR_H_
-')
+''')
 
     # Also replace obsolete includes in thorium overlay and src_dir
     for base_p in [thorium_src_overlay, src_dir]:
