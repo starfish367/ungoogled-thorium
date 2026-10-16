@@ -454,6 +454,18 @@ constexpr bool Contains(const Range& range, const Value& value) {
                 with open(tab_feat_cc, 'w', encoding='utf-8') as f:
                     f.write(c)
 
+        # Patch tab_strip_prefs.cc to add missing tab search fallback definitions
+        tsp_cc = os.path.join(base_p, 'chrome', 'browser', 'ui', 'tabs', 'tab_strip_prefs.cc')
+        if os.path.exists(tsp_cc):
+            with open(tsp_cc, 'r', encoding='utf-8') as f:
+                c = f.read()
+            if 'kTabSearchRightAligned' in c and 'namespace prefs {' not in c:
+                patch_str = 'namespace prefs {\ninline constexpr char kTabSearchRightAligned[] = "tab_search.right_aligned";\n}\n\nnamespace features {\ninline bool IsTabSearchMoving() { return false; }\n}\n\ninline bool CanShowTabSearchPositionSetting() { return false; }\n\n'
+                c = c.replace('namespace tabs {', patch_str + 'namespace tabs {')
+                with open(tsp_cc, 'w', encoding='utf-8') as f:
+                    f.write(c)
+
+
     # Create forwarding headers for browser_navigator.h and browser_navigator_params.h (moved to ui/navigator/ in M154)
     ui_dir = os.path.join(src_dir, 'chrome', 'browser', 'ui')
     if os.path.exists(ui_dir):
