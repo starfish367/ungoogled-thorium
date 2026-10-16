@@ -361,6 +361,9 @@ constexpr bool Contains(const Range& range, const Value& value) {
         'chrome/browser/ui/toolbar/chrome_labs/chrome_labs_utils.cc',
         'chrome/browser/extensions/component_extensions_allowlist/allowlist.cc',
         'chrome/browser/extensions/extension_management_internal.h',
+        'chrome/browser/download/chrome_download_manager_delegate.cc',
+        'chrome/browser/download/download_ui_controller.cc',
+        'chrome/browser/download/insecure_download_blocking.cc',
     ]:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
@@ -409,6 +412,9 @@ constexpr bool Contains(const Range& range, const Value& value) {
             'chrome/browser/ui/toolbar/chrome_labs/chrome_labs_utils.cc',
             'chrome/browser/extensions/component_extensions_allowlist/allowlist.cc',
             'chrome/browser/extensions/extension_management_internal.h',
+            'chrome/browser/download/chrome_download_manager_delegate.cc',
+            'chrome/browser/download/download_ui_controller.cc',
+            'chrome/browser/download/insecure_download_blocking.cc',
         ]:
             rm_p = os.path.join(thorium_src_overlay, *rm_rel.split('/'))
             if os.path.exists(rm_p):
