@@ -358,6 +358,8 @@ constexpr bool Contains(const Range& range, const Value& value) {
         'chrome/browser/ui/views/frame/browser_root_view.cc',
         'chrome/browser/themes/theme_helper_win.cc',
         'chrome/browser/ui/toolbar/chrome_labs/chrome_labs_utils.cc',
+        'chrome/browser/extensions/component_extensions_allowlist/allowlist.cc',
+        'chrome/browser/extensions/extension_management_internal.h',
     ]:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
@@ -403,6 +405,8 @@ constexpr bool Contains(const Range& range, const Value& value) {
             'chrome/browser/ui/views/frame/browser_root_view.cc',
             'chrome/browser/themes/theme_helper_win.cc',
             'chrome/browser/ui/toolbar/chrome_labs/chrome_labs_utils.cc',
+            'chrome/browser/extensions/component_extensions_allowlist/allowlist.cc',
+            'chrome/browser/extensions/extension_management_internal.h',
         ]:
             rm_p = os.path.join(thorium_src_overlay, *rm_rel.split('/'))
             if os.path.exists(rm_p):
@@ -417,6 +421,9 @@ constexpr bool Contains(const Range& range, const Value& value) {
         thorium_install_static = os.path.join(thorium_src_overlay, 'chrome', 'install_static')
         if os.path.exists(thorium_install_static):
             shutil.rmtree(thorium_install_static, ignore_errors=True)
+        thorium_chrome_extensions = os.path.join(thorium_src_overlay, 'chrome', 'browser', 'extensions')
+        if os.path.exists(thorium_chrome_extensions):
+            shutil.rmtree(thorium_chrome_extensions, ignore_errors=True)
         thorium_extensions = os.path.join(thorium_src_overlay, 'extensions')
         if os.path.exists(thorium_extensions):
             shutil.rmtree(thorium_extensions, ignore_errors=True)
