@@ -499,6 +499,20 @@ constexpr bool Contains(const Range& range, const Value& value) {
                 with open(tsp_cc, 'w', encoding='utf-8') as f:
                     f.write(c)
 
+        # Patch configuration_policy_handler_list_factory.cc to add missing prefs::kBoundSessionCredentialsEnabled
+        cph_cc = os.path.join(base_p, 'chrome', 'browser', 'policy', 'configuration_policy_handler_list_factory.cc')
+        if os.path.exists(cph_cc):
+            with open(cph_cc, 'r', encoding='utf-8') as f:
+                c = f.read()
+            if 'kBoundSessionCredentialsEnabled' in c and 'inline constexpr char kBoundSessionCredentialsEnabled' not in c:
+                patch_str = 'namespace prefs {\ninline constexpr char kBoundSessionCredentialsEnabled[] = "signin.bound_session_credentials_enabled";\n}\n\n'
+                if 'namespace policy {' in c:
+                    c = c.replace('namespace policy {', patch_str + 'namespace policy {', 1)
+                else:
+                    c = patch_str + c
+                with open(cph_cc, 'w', encoding='utf-8') as f:
+                    f.write(c)
+
 
     # Create forwarding headers for browser_navigator.h and browser_navigator_params.h (moved to ui/navigator/ in M154)
     ui_dir = os.path.join(src_dir, 'chrome', 'browser', 'ui')
