@@ -364,6 +364,8 @@ constexpr bool Contains(const Range& range, const Value& value) {
         'chrome/browser/download/chrome_download_manager_delegate.cc',
         'chrome/browser/download/download_ui_controller.cc',
         'chrome/browser/download/insecure_download_blocking.cc',
+        'chrome/browser/download/download_target_determiner.cc',
+        'ui/gtk/native_theme_gtk.cc',
     ]:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
@@ -415,6 +417,8 @@ constexpr bool Contains(const Range& range, const Value& value) {
             'chrome/browser/download/chrome_download_manager_delegate.cc',
             'chrome/browser/download/download_ui_controller.cc',
             'chrome/browser/download/insecure_download_blocking.cc',
+            'chrome/browser/download/download_target_determiner.cc',
+            'ui/gtk/native_theme_gtk.cc',
         ]:
             rm_p = os.path.join(thorium_src_overlay, *rm_rel.split('/'))
             if os.path.exists(rm_p):
@@ -432,6 +436,12 @@ constexpr bool Contains(const Range& range, const Value& value) {
         thorium_chrome_extensions = os.path.join(thorium_src_overlay, 'chrome', 'browser', 'extensions')
         if os.path.exists(thorium_chrome_extensions):
             shutil.rmtree(thorium_chrome_extensions, ignore_errors=True)
+        thorium_chrome_download = os.path.join(thorium_src_overlay, 'chrome', 'browser', 'download')
+        if os.path.exists(thorium_chrome_download):
+            shutil.rmtree(thorium_chrome_download, ignore_errors=True)
+        thorium_ui_gtk = os.path.join(thorium_src_overlay, 'ui', 'gtk')
+        if os.path.exists(thorium_ui_gtk):
+            shutil.rmtree(thorium_ui_gtk, ignore_errors=True)
         thorium_extensions = os.path.join(thorium_src_overlay, 'extensions')
         if os.path.exists(thorium_extensions):
             shutil.rmtree(thorium_extensions, ignore_errors=True)
