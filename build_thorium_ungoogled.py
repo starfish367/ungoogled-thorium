@@ -513,6 +513,35 @@ constexpr bool Contains(const Range& range, const Value& value) {
                 with open(cph_cc, 'w', encoding='utf-8') as f:
                     f.write(c)
 
+        # Patch signin_util_win.cc to add missing prefs::kSignedInWithCredentialProvider
+        suw_cc = os.path.join(base_p, 'chrome', 'browser', 'signin', 'signin_util_win.cc')
+        if os.path.exists(suw_cc):
+            with open(suw_cc, 'r', encoding='utf-8') as f:
+                c = f.read()
+            if 'kSignedInWithCredentialProvider' in c and 'inline constexpr char kSignedInWithCredentialProvider' not in c:
+                patch_str = 'namespace prefs {\ninline constexpr char kSignedInWithCredentialProvider[] = "profile.signed_in_with_credential_provider";\n}\n\n'
+                c = patch_str + c
+                with open(suw_cc, 'w', encoding='utf-8') as f:
+                    f.write(c)
+
+    # Ensure missing ungoogled-chromium prefs exist in signin_pref_names.h if present
+    spn_h = os.path.join(src_dir, 'components', 'signin', 'public', 'base', 'signin_pref_names.h')
+    if os.path.exists(spn_h):
+        try:
+            with open(spn_h, 'r', encoding='utf-8') as f:
+                spn_c = f.read()
+            needed_prefs = [
+                'kSignedInWithCredentialProvider',
+                'kBoundSessionCredentialsEnabled',
+            ]
+            to_add = [f'inline constexpr char {p}[] = "signin.{p}";' for p in needed_prefs if p not in spn_c]
+            if to_add and 'namespace prefs {' in spn_c:
+                spn_c = spn_c.replace('namespace prefs {', 'namespace prefs {\n' + '\n'.join(to_add) + '\n', 1)
+                with open(spn_h, 'w', encoding='utf-8') as f:
+                    f.write(spn_c)
+        except Exception as e:
+            print(f"Warning patching signin_pref_names.h: {e}")
+
 
     # Create forwarding headers for browser_navigator.h and browser_navigator_params.h (moved to ui/navigator/ in M154)
     ui_dir = os.path.join(src_dir, 'chrome', 'browser', 'ui')
