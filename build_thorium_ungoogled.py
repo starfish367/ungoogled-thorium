@@ -366,6 +366,13 @@ constexpr bool Contains(const Range& range, const Value& value) {
         'chrome/browser/download/insecure_download_blocking.cc',
         'chrome/browser/download/download_target_determiner.cc',
         'ui/gtk/native_theme_gtk.cc',
+        'chrome/browser/net/profile_network_context_service.cc',
+        'chrome/browser/net/stub_resolver_config_reader.cc',
+        'chrome/browser/net/default_dns_over_https_config_source.cc',
+        'chrome/browser/permissions/quiet_notification_permission_ui_state.cc',
+        'chrome/browser/background/extensions/background_mode_manager.cc',
+        'chrome/browser/profiles/profile_shortcut_manager_win.cc',
+        'chrome/browser/obsolete_system/obsolete_system_linux.cc',
     ]:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
@@ -419,6 +426,13 @@ constexpr bool Contains(const Range& range, const Value& value) {
             'chrome/browser/download/insecure_download_blocking.cc',
             'chrome/browser/download/download_target_determiner.cc',
             'ui/gtk/native_theme_gtk.cc',
+            'chrome/browser/net/profile_network_context_service.cc',
+            'chrome/browser/net/stub_resolver_config_reader.cc',
+            'chrome/browser/net/default_dns_over_https_config_source.cc',
+            'chrome/browser/permissions/quiet_notification_permission_ui_state.cc',
+            'chrome/browser/background/extensions/background_mode_manager.cc',
+            'chrome/browser/profiles/profile_shortcut_manager_win.cc',
+            'chrome/browser/obsolete_system/obsolete_system_linux.cc',
         ]:
             rm_p = os.path.join(thorium_src_overlay, *rm_rel.split('/'))
             if os.path.exists(rm_p):
@@ -439,6 +453,10 @@ constexpr bool Contains(const Range& range, const Value& value) {
         thorium_chrome_download = os.path.join(thorium_src_overlay, 'chrome', 'browser', 'download')
         if os.path.exists(thorium_chrome_download):
             shutil.rmtree(thorium_chrome_download, ignore_errors=True)
+        for b_dir in ['net', 'permissions', 'background', 'profiles', 'obsolete_system', 'feed']:
+            rm_p = os.path.join(thorium_src_overlay, 'chrome', 'browser', b_dir)
+            if os.path.exists(rm_p):
+                shutil.rmtree(rm_p, ignore_errors=True)
         thorium_ui_gtk = os.path.join(thorium_src_overlay, 'ui', 'gtk')
         if os.path.exists(thorium_ui_gtk):
             shutil.rmtree(thorium_ui_gtk, ignore_errors=True)
