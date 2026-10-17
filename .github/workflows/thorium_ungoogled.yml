@@ -80,6 +80,7 @@ jobs:
           mkdir -p src/src/out/Thorium_arm64 "${GITHUB_WORKSPACE}/.cache/sccache"
           rm -rf ~/.cache/vpython ~/.cache/cipd ~/.cache/pip || true
           rm -rf src/src/v8/tools/builtins-pgo || true
+          sudo rm -rf /opt/hostedtoolcache /usr/local/share/boost /usr/local/lib/android /tmp/* || true
           sudo apt-get clean || true
           df -h
 

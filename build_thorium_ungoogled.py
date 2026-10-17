@@ -373,6 +373,15 @@ constexpr bool Contains(const Range& range, const Value& value) {
         'chrome/browser/background/extensions/background_mode_manager.cc',
         'chrome/browser/profiles/profile_shortcut_manager_win.cc',
         'chrome/browser/obsolete_system/obsolete_system_linux.cc',
+        'chrome/browser/ui/views/toolbar/reload_button.h',
+        'chrome/browser/ui/views/toolbar/reload_button.cc',
+        'chrome/browser/ui/views/toolbar/home_button.cc',
+        'chrome/browser/ui/views/toolbar/browser_app_menu_button.cc',
+        'chrome/browser/ui/startup/google_api_keys_infobar_delegate.cc',
+        'chrome/browser/ui/startup/bad_flags_prompt.cc',
+        'chrome/browser/ui/startup/default_browser_prompt/default_browser_prompt.cc',
+        'chrome/browser/ui/webui/whats_new/whats_new_util.cc',
+        'chrome/browser/ui/webui/about/about_ui.cc',
     ]:
         full_path = os.path.join(src_dir, rel_path)
         if os.path.exists(full_path):
@@ -433,12 +442,29 @@ constexpr bool Contains(const Range& range, const Value& value) {
             'chrome/browser/background/extensions/background_mode_manager.cc',
             'chrome/browser/profiles/profile_shortcut_manager_win.cc',
             'chrome/browser/obsolete_system/obsolete_system_linux.cc',
+            'chrome/browser/ui/views/toolbar/reload_button.h',
+            'chrome/browser/ui/views/toolbar/reload_button.cc',
+            'chrome/browser/ui/views/toolbar/home_button.cc',
+            'chrome/browser/ui/views/toolbar/browser_app_menu_button.cc',
+            'chrome/browser/ui/startup/google_api_keys_infobar_delegate.cc',
+            'chrome/browser/ui/startup/bad_flags_prompt.cc',
+            'chrome/browser/ui/startup/default_browser_prompt/default_browser_prompt.cc',
+            'chrome/browser/ui/webui/whats_new/whats_new_util.cc',
+            'chrome/browser/ui/webui/about/about_ui.cc',
         ]:
             rm_p = os.path.join(thorium_src_overlay, *rm_rel.split('/'))
             if os.path.exists(rm_p):
                 os.remove(rm_p)
         for comp_rm in ['history', 'bookmarks', 'download', 'omnibox', 'user_education']:
             rm_p = os.path.join(thorium_src_overlay, 'components', comp_rm)
+            if os.path.exists(rm_p):
+                shutil.rmtree(rm_p, ignore_errors=True)
+        for ui_sub in ['toolbar']:
+            rm_p = os.path.join(thorium_src_overlay, 'chrome', 'browser', 'ui', 'views', ui_sub)
+            if os.path.exists(rm_p):
+                shutil.rmtree(rm_p, ignore_errors=True)
+        for ui_sub in ['startup', 'webui']:
+            rm_p = os.path.join(thorium_src_overlay, 'chrome', 'browser', 'ui', ui_sub)
             if os.path.exists(rm_p):
                 shutil.rmtree(rm_p, ignore_errors=True)
         thorium_content_browser = os.path.join(thorium_src_overlay, 'content', 'browser')
