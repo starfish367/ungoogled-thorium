@@ -25,14 +25,15 @@ def align_source_timestamps(src_dir, out_dir):
     past_timestamp = 1700000000.0  # 2023-11-15 00:00:00
     print(f"Aligning source timestamps in {src_dir} (excluding {out_dir}) to preserve incremental cache...")
     count = 0
+    skip_dirs = {'.git', 'out', 'testing', 'web_tests', 'test', 'tests', 'docs'}
     for root, dirs, files in os.walk(src_dir):
-        dirs[:] = [d for d in dirs if d != '.git' and d != 'out' and os.path.abspath(os.path.join(root, d)) != out_full]
+        dirs[:] = [d for d in dirs if d not in skip_dirs and os.path.abspath(os.path.join(root, d)) != out_full]
         for f in files:
             p = os.path.join(root, f)
             try:
-                os.utime(p, (past_timestamp, past_timestamp))
+                os.utime(p, (past_timestamp, past_timestamp), follow_symlinks=False)
                 count += 1
-            except OSError:
+            except (OSError, NotImplementedError):
                 pass
     print(f"Aligned {count} source files to {past_timestamp}.")
 
@@ -60,7 +61,16 @@ def main():
     # Set up depot_tools
     depot_tools_dir = os.path.join(root_dir, 'depot_tools')
     if not os.path.exists(depot_tools_dir):
-        run_cmd(['git', 'clone', 'https://chromium.googlesource.com/chromium/tools/depot_tools.git', depot_tools_dir])
+        for attempt in range(1, 4):
+            try:
+                print(f"Cloning depot_tools (attempt {attempt}/3)...")
+                run_cmd(['git', 'clone', 'https://chromium.googlesource.com/chromium/tools/depot_tools.git', depot_tools_dir])
+                break
+            except Exception:
+                if attempt == 3:
+                    raise
+                shutil.rmtree(depot_tools_dir, ignore_errors=True)
+                time.sleep(15)
 
     env = os.environ.copy()
     sep = ';' if sys.platform == 'win32' else ':'
@@ -81,10 +91,20 @@ def main():
     # Ensure depot tools is updated so fetch works
     update_cmd = 'update_depot_tools.bat' if sys.platform == 'win32' else 'update_depot_tools'
     run_cmd([update_cmd], cwd=depot_tools_dir, env=env, shell=True)
+    env['DEPOT_TOOLS_UPDATE'] = '0'
 
     thorium_dir = os.path.join(root_dir, 'Thorium')
     if not os.path.exists(thorium_dir):
-        run_cmd(['git', 'clone', '--depth=1', 'https://github.com/Alex313031/Thorium.git', thorium_dir])
+        for attempt in range(1, 4):
+            try:
+                print(f"Cloning Thorium (attempt {attempt}/3)...")
+                run_cmd(['git', 'clone', '--depth=1', 'https://github.com/Alex313031/Thorium.git', thorium_dir])
+                break
+            except Exception:
+                if attempt == 3:
+                    raise
+                shutil.rmtree(thorium_dir, ignore_errors=True)
+                time.sleep(15)
 
     # Patch Thorium WebUI TypeScript and CSS files to fix mismatched types and stylelint errors
     for ts_rel, old_s, new_s in [
@@ -548,6 +568,26 @@ constexpr bool Contains(const Range& range, const Value& value) {
                 patch_str = 'namespace prefs {\ninline constexpr char kSignedInWithCredentialProvider[] = "profile.signed_in_with_credential_provider";\n}\n\n'
                 c = patch_str + c
                 with open(suw_cc, 'w', encoding='utf-8') as f:
+                    f.write(c)
+
+        # Patch chrome_main_delegate.cc to remove unused base/functional/overloaded.h
+        cmd_cc = os.path.join(base_p, 'chrome', 'app', 'chrome_main_delegate.cc')
+        if os.path.exists(cmd_cc):
+            with open(cmd_cc, 'r', encoding='utf-8') as f:
+                c = f.read()
+            if '#include "base/functional/overloaded.h"' in c:
+                c = c.replace('#include "base/functional/overloaded.h"', '// #include "base/functional/overloaded.h"')
+                with open(cmd_cc, 'w', encoding='utf-8') as f:
+                    f.write(c)
+
+        # Patch about_flags.cc to remove unused chrome/browser/ip_protection/ip_protection_switches.h
+        af_cc = os.path.join(base_p, 'chrome', 'browser', 'about_flags.cc')
+        if os.path.exists(af_cc):
+            with open(af_cc, 'r', encoding='utf-8') as f:
+                c = f.read()
+            if '#include "chrome/browser/ip_protection/ip_protection_switches.h"' in c:
+                c = c.replace('#include "chrome/browser/ip_protection/ip_protection_switches.h"', '// #include "chrome/browser/ip_protection/ip_protection_switches.h"')
+                with open(af_cc, 'w', encoding='utf-8') as f:
                     f.write(c)
 
     # Ensure missing ungoogled-chromium prefs exist in signin_pref_names.h if present
@@ -1502,20 +1542,30 @@ group("native_theme_browser") {
 
         appdir_src = os.path.join(appimage_dir, 'AppDir')
         if os.path.exists(appdir_src):
-            run_cmd(f"cp -r {appdir_src}/* {appdir}/", shell=True)
+            for entry in os.listdir(appdir_src):
+                s = os.path.join(appdir_src, entry)
+                d = os.path.join(appdir, entry)
+                if os.path.isdir(s):
+                    shutil.copytree(s, d, dirs_exist_ok=True)
+                else:
+                    shutil.copy2(s, d)
 
         for item in ['chrome', 'thorium', 'chrome_crashpad_handler', 'icudtl.dat', 'locales', 'MEIPreload']:
             src_item = os.path.join(src_dir, out_dir, item)
             if os.path.exists(src_item):
-                run_cmd(f"cp -r {src_item} {appdir}/", shell=True)
+                dst_item = os.path.join(appdir, item)
+                if os.path.isdir(src_item):
+                    shutil.copytree(src_item, dst_item, dirs_exist_ok=True)
+                else:
+                    shutil.copy2(src_item, dst_item)
                 if item == 'chrome' and not os.path.exists(os.path.join(appdir, 'thorium')):
-                    run_cmd(f"cp -r {src_item} {appdir}/thorium", shell=True)
+                    shutil.copy2(src_item, os.path.join(appdir, 'thorium'))
                 elif item == 'thorium' and not os.path.exists(os.path.join(appdir, 'chrome')):
-                    run_cmd(f"cp -r {src_item} {appdir}/chrome", shell=True)
+                    shutil.copy2(src_item, os.path.join(appdir, 'chrome'))
 
         for file in glob.glob(os.path.join(src_dir, out_dir, '*.bin')) + glob.glob(os.path.join(src_dir, out_dir, '*.pak')) + glob.glob(os.path.join(src_dir, out_dir, '*.so')):
             if os.path.exists(file):
-                run_cmd(f"cp -r {file} {appdir}/", shell=True)
+                shutil.copy2(file, os.path.join(appdir, os.path.basename(file)))
 
         apprun_path = os.path.join(appdir, 'AppRun')
         if not os.path.exists(apprun_path):
