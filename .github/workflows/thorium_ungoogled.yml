@@ -27,8 +27,8 @@ jobs:
       - name: Maximize Build Space
         uses: easimon/maximize-build-space@master
         with:
-          root-reserve-mb: 35840
-          temp-reserve-mb: 1024
+          root-reserve-mb: 10240
+          temp-reserve-mb: 10240
           swap-size-mb: 8192
           remove-dotnet: 'true'
           remove-android: 'true'
@@ -43,13 +43,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Redirect Runner Temp to Build Volume
-        run: |
-          mkdir -p "${GITHUB_WORKSPACE}/.runner_temp"
-          sudo rm -rf /home/runner/work/_temp
-          sudo ln -s "${GITHUB_WORKSPACE}/.runner_temp" /home/runner/work/_temp
-          echo "RUNNER_TEMP=${GITHUB_WORKSPACE}/.runner_temp" >> "$GITHUB_ENV"
 
       - name: Restore Build Output Cache (Linux)
         uses: actions/cache/restore@v4
@@ -78,7 +71,6 @@ jobs:
           df -h
           mkdir -p src/src/out/Thorium_arm64
           rm -rf src/src/out/Thorium_arm64/Thorium.AppDir || true
-          rm -rf "${GITHUB_WORKSPACE}/.runner_temp" || true
           rm -rf ~/.cache/vpython ~/.cache/cipd ~/.cache/pip || true
           rm -rf src/src/v8/tools/builtins-pgo || true
           sudo rm -rf /opt/hostedtoolcache /usr/local/share/boost /usr/local/lib/android /tmp/* || true
