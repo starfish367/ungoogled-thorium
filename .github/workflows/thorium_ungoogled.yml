@@ -27,7 +27,8 @@ jobs:
       - name: Maximize Build Space
         uses: easimon/maximize-build-space@master
         with:
-          root-reserve-mb: 35840
+          build-mount-path: '/home/runner/work'
+          root-reserve-mb: 20480
           temp-reserve-mb: 1024
           swap-size-mb: 8192
           remove-dotnet: 'true'
@@ -44,9 +45,6 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install sccache
-        uses: mozilla-actions/sccache-action@v0.0.4
-
       - name: Restore Build Output Cache (Linux)
         uses: actions/cache/restore@v4
         with:
@@ -58,14 +56,9 @@ jobs:
       - name: Run Build Script
         timeout-minutes: 340
         run: |
-          mkdir -p ~/.cache "${GITHUB_WORKSPACE}/.cache" "${GITHUB_WORKSPACE}/.cache/sccache"
-          sccache --start-server || true
+          mkdir -p ~/.cache "${GITHUB_WORKSPACE}/.cache"
           python build_thorium_ungoogled.py --target-os linux --target-cpu arm64 --src-dir src
         env:
-          SCCACHE_DIR: "${{ github.workspace }}/.cache/sccache"
-          SCCACHE_CACHE_SIZE: "10G"
-          SCCACHE_IGNORE_SERVER_IO_ERROR: "1"
-          SCCACHE_IDLE_TIMEOUT: "0"
           XDG_CACHE_HOME: "${{ github.workspace }}/.cache"
           VPYTHON_VIRTUALENV_ROOT: "${{ github.workspace }}/.cache/vpython"
           CIPD_CACHE_DIR: "${{ github.workspace }}/.cache/cipd"
@@ -77,7 +70,8 @@ jobs:
           sudo killall -9 ninja clang clang++ python3 2>/dev/null || true
           sleep 3
           df -h
-          mkdir -p src/src/out/Thorium_arm64 "${GITHUB_WORKSPACE}/.cache/sccache"
+          mkdir -p src/src/out/Thorium_arm64
+          rm -rf src/src/out/Thorium_arm64/Thorium.AppDir || true
           rm -rf ~/.cache/vpython ~/.cache/cipd ~/.cache/pip || true
           rm -rf src/src/v8/tools/builtins-pgo || true
           sudo rm -rf /opt/hostedtoolcache /usr/local/share/boost /usr/local/lib/android /tmp/* || true
@@ -90,13 +84,6 @@ jobs:
         with:
           path: src/src/out/Thorium_arm64
           key: out-linux-arm64-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-
-      - name: Save sccache (Linux)
-        uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: ${{ github.workspace }}/.cache/sccache
-          key: sccache-linux-arm64-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -128,17 +115,6 @@ jobs:
       - name: Configure Developer Command Prompt
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Install sccache
-        uses: mozilla-actions/sccache-action@v0.0.4
-
-      - name: Restore sccache (Windows)
-        uses: actions/cache/restore@v4
-        with:
-          path: D:\.sccache
-          key: sccache-windows-x64-${{ github.sha }}-${{ github.run_id }}
-          restore-keys: |
-            sccache-windows-x64-
-
       - name: Restore Build Output Cache (Windows)
         uses: actions/cache/restore@v4
         with:
@@ -161,13 +137,8 @@ jobs:
         timeout-minutes: 340
         shell: pwsh
         run: |
-          sccache --start-server
           python build_thorium_ungoogled.py --target-os win --target-cpu x64 --src-dir D:\src
         env:
-          SCCACHE_DIR: "D:\\.sccache"
-          SCCACHE_CACHE_SIZE: "20G"
-          SCCACHE_IGNORE_SERVER_IO_ERROR: "1"
-          SCCACHE_IDLE_TIMEOUT: "0"
           DEPOT_TOOLS_WIN_TOOLCHAIN: "0"
 
       - name: Cleanup temporary files before caching (Windows)
@@ -176,7 +147,7 @@ jobs:
         run: |
           Stop-Process -Name ninja, clang-cl, python -Force -ErrorAction SilentlyContinue
           Start-Sleep -Seconds 3
-          New-Item -ItemType Directory -Force -Path "D:\src\src\out\Thorium_x64", "D:\.sccache" | Out-Null
+          New-Item -ItemType Directory -Force -Path "D:\src\src\out\Thorium_x64" | Out-Null
           Get-PSDrive
 
       - name: Save Build Output Cache (Windows)
@@ -185,13 +156,6 @@ jobs:
         with:
           path: D:\src\src\out\Thorium_x64
           key: out-windows-x64-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-
-      - name: Save sccache (Windows)
-        uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: D:\.sccache
-          key: sccache-windows-x64-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
