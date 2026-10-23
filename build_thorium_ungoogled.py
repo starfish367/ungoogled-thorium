@@ -541,18 +541,7 @@ constexpr bool Contains(const Range& range, const Value& value) {
         print(f"Copying Thorium overlay from {thorium_src_overlay} to {src_dir}...")
         shutil.copytree(thorium_src_overlay, src_dir, dirs_exist_ok=True)
 
-        # Inject Thorium flag entries into stock about_flags.cc
-        stock_af_cc = os.path.join(src_dir, 'chrome', 'browser', 'about_flags.cc')
-        if os.path.exists(stock_af_cc):
-            with open(stock_af_cc, 'r', encoding='utf-8') as f:
-                af_c = f.read()
-            if 'thorium_flag_entries.h' not in af_c and 'const FeatureEntry kFeatureEntries[] = {' in af_c:
-                af_c = af_c.replace(
-                    'const FeatureEntry kFeatureEntries[] = {',
-                    '#include "chrome/browser/thorium_flag_choices.h"\nconst FeatureEntry kFeatureEntries[] = {\n#include "chrome/browser/thorium_flag_entries.h"'
-                )
-                with open(stock_af_cc, 'w', encoding='utf-8') as f:
-                    f.write(af_c)
+
 
     # Patch Thorium features.cc where IsTabSearchMoving() was removed in Chromium 154
     for base_p in [thorium_src_overlay, src_dir]:
