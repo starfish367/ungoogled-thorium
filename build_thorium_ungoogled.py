@@ -25,9 +25,8 @@ def align_source_timestamps(src_dir, out_dir):
     past_timestamp = 1700000000.0  # 2023-11-15 00:00:00
     print(f"Aligning source timestamps in {src_dir} (excluding {out_dir}) to preserve incremental cache...")
     count = 0
-    skip_dirs = {'.git', 'out', 'testing', 'web_tests', 'test', 'tests', 'docs'}
     for root, dirs, files in os.walk(src_dir):
-        dirs[:] = [d for d in dirs if d not in skip_dirs and os.path.abspath(os.path.join(root, d)) != out_full]
+        dirs[:] = [d for d in dirs if d != '.git' and d != 'out' and os.path.abspath(os.path.join(root, d)) != out_full]
         for f in files:
             p = os.path.join(root, f)
             try:
