@@ -541,6 +541,7 @@ constexpr bool Contains(const Range& range, const Value& value) {
             os.path.join(thorium_src_overlay, 'chrome', 'app', 'chrome_main_delegate.cc'),
             os.path.join(thorium_src_overlay, 'chrome', 'browser', 'about_flags.cc'),
             os.path.join(thorium_src_overlay, 'chrome', 'browser', 'chrome_content_browser_client.cc'),
+            os.path.join(thorium_src_overlay, 'chrome', 'browser', 'shell_integration_linux.cc'),
         ]:
             if os.path.exists(obsolete_f):
                 try:
@@ -553,6 +554,7 @@ constexpr bool Contains(const Range& range, const Value& value) {
             'chrome/app/chrome_main_delegate.cc',
             'chrome/browser/about_flags.cc',
             'chrome/browser/chrome_content_browser_client.cc',
+            'chrome/browser/shell_integration_linux.cc',
         ]:
             if os.path.exists(os.path.join(src_dir, stock_f)):
                 try:
@@ -563,7 +565,7 @@ constexpr bool Contains(const Range& range, const Value& value) {
         print(f"Copying Thorium overlay from {thorium_src_overlay} to {src_dir}...")
         shutil.copytree(thorium_src_overlay, src_dir, dirs_exist_ok=True)
 
-        # Protect safe_browsing_prefs.h include in chrome_content_browser_client.cc
+        # Protect safe_browsing_prefs.h include and ensure MaybeAddCondition in chrome_content_browser_client.cc
         ccbc = os.path.join(src_dir, 'chrome', 'browser', 'chrome_content_browser_client.cc')
         if os.path.exists(ccbc):
             with open(ccbc, 'r', encoding='utf-8') as f:
@@ -573,8 +575,25 @@ constexpr bool Contains(const Range& range, const Value& value) {
                     '#include "components/safe_browsing/core/common/safe_browsing_prefs.h"',
                     '#if __has_include("components/safe_browsing/core/common/safe_browsing_prefs.h")\n#include "components/safe_browsing/core/common/safe_browsing_prefs.h"\n#endif'
                 )
-                with open(ccbc, 'w', encoding='utf-8') as f:
-                    f.write(ccbc_c)
+            if 'void MaybeAddCondition(' not in ccbc_c:
+                helper_def = (
+                    'namespace {\n'
+                    'void MaybeAddCondition(\n'
+                    '    std::unique_ptr<content::CommitDeferringCondition> maybe_condition,\n'
+                    '    std::vector<std::unique_ptr<content::CommitDeferringCondition>>* conditions) {\n'
+                    '  if (maybe_condition) {\n'
+                    '    conditions->push_back(std::move(maybe_condition));\n'
+                    '  }\n'
+                    '}\n'
+                    '}  // namespace\n\n'
+                )
+                target_str = 'std::vector<std::unique_ptr<content::CommitDeferringCondition>>'
+                if target_str in ccbc_c:
+                    ccbc_c = ccbc_c.replace(target_str, helper_def + target_str, 1)
+                else:
+                    ccbc_c = helper_def + ccbc_c
+            with open(ccbc, 'w', encoding='utf-8') as f:
+                f.write(ccbc_c)
 
 
 
