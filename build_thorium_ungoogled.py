@@ -542,6 +542,8 @@ constexpr bool Contains(const Range& range, const Value& value) {
             os.path.join(thorium_src_overlay, 'chrome', 'browser', 'about_flags.cc'),
             os.path.join(thorium_src_overlay, 'chrome', 'browser', 'chrome_content_browser_client.cc'),
             os.path.join(thorium_src_overlay, 'chrome', 'browser', 'shell_integration_linux.cc'),
+            os.path.join(thorium_src_overlay, 'chrome', 'browser', 'ui', 'tabs', 'features.cc'),
+            os.path.join(thorium_src_overlay, 'chrome', 'browser', 'ui', 'ui_features.cc'),
         ]:
             if os.path.exists(obsolete_f):
                 try:
@@ -555,6 +557,8 @@ constexpr bool Contains(const Range& range, const Value& value) {
             'chrome/browser/about_flags.cc',
             'chrome/browser/chrome_content_browser_client.cc',
             'chrome/browser/shell_integration_linux.cc',
+            'chrome/browser/ui/tabs/features.cc',
+            'chrome/browser/ui/ui_features.cc',
         ]:
             if os.path.exists(os.path.join(src_dir, stock_f)):
                 try:
