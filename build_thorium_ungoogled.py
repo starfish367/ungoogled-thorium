@@ -523,6 +523,7 @@ constexpr bool Contains(const Range& range, const Value& value) {
         for obsolete_f in [
             os.path.join(thorium_src_overlay, 'chrome', 'app', 'chrome_main_delegate.cc'),
             os.path.join(thorium_src_overlay, 'chrome', 'browser', 'about_flags.cc'),
+            os.path.join(thorium_src_overlay, 'chrome', 'browser', 'chrome_content_browser_client.cc'),
         ]:
             if os.path.exists(obsolete_f):
                 try:
@@ -531,7 +532,11 @@ constexpr bool Contains(const Range& range, const Value& value) {
                     pass
 
         # Ensure stock Chromium files are preserved/clean
-        for stock_f in ['chrome/app/chrome_main_delegate.cc', 'chrome/browser/about_flags.cc']:
+        for stock_f in [
+            'chrome/app/chrome_main_delegate.cc',
+            'chrome/browser/about_flags.cc',
+            'chrome/browser/chrome_content_browser_client.cc',
+        ]:
             if os.path.exists(os.path.join(src_dir, stock_f)):
                 try:
                     run_cmd(['git', 'checkout', '--', stock_f], cwd=src_dir, check=False)
