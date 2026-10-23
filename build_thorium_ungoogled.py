@@ -575,6 +575,13 @@ constexpr bool Contains(const Range& range, const Value& value) {
                     '#include "components/safe_browsing/core/common/safe_browsing_prefs.h"',
                     '#if __has_include("components/safe_browsing/core/common/safe_browsing_prefs.h")\n#include "components/safe_browsing/core/common/safe_browsing_prefs.h"\n#endif'
                 )
+            # Unconditionally define MaybeAddCondition even when safe browsing is disabled
+            import re
+            ccbc_c = re.sub(
+                r'#if\s+BUILDFLAG\(SAFE_BROWSING_AVAILABLE\)\s*\n(\s*void\s+MaybeAddCondition\b)',
+                r'#if 1\n\1',
+                ccbc_c
+            )
             if 'void MaybeAddCondition(' not in ccbc_c:
                 helper_def = (
                     'namespace {\n'
