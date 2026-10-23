@@ -1453,21 +1453,7 @@ group("native_theme_browser") {
     with open(os.path.join(out_path, 'args.gn'), 'w') as f:
         f.write('\n'.join(gn_args))
 
-    # Remove stale cached gen/components to ensure clean grit, prepopulated search engines, and typescript compilation
-    for stale_gen in [
-        os.path.join(out_path, 'gen', 'components', 'webui', 'flags'),
-        os.path.join(out_path, 'gen', 'components', 'webui', 'chrome_urls'),
-        os.path.join(out_path, 'gen', 'components', 'webui', 'version'),
-        os.path.join(out_path, 'gen', 'components', 'strings'),
-        os.path.join(out_path, 'gen', 'components', 'search_engines'),
-        os.path.join(out_path, 'gen', 'third_party', 'search_engines_data'),
-        os.path.join(out_path, 'gen', 'chrome', 'app'),
-        os.path.join(out_path, 'gen', 'chrome', 'app', 'theme'),
-        os.path.join(out_path, 'gen', 'chrome', 'browser', 'resources', 'components'),
-    ]:
-        if os.path.exists(stale_gen):
-            print(f"Purging stale cached {stale_gen}...")
-            shutil.rmtree(stale_gen, ignore_errors=True)
+    # Keep gen/ cache fully intact to preserve incremental headers and object files
 
     print("Ensuring gn executable is available...")
     buildtools_platform = 'win' if sys.platform == 'win32' else 'linux64'
