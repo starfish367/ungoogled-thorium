@@ -44,6 +44,7 @@ def get_chromium_version(root_dir):
     return None
 
 def main():
+    import glob
     parser = argparse.ArgumentParser(description="Build Thorium + ungoogled-chromium")
     parser.add_argument('--target-os', default='linux', choices=['linux', 'win'])
     parser.add_argument('--target-cpu', default='arm64', choices=['arm64', 'x64'])
@@ -1448,7 +1449,6 @@ group("native_theme_browser") {
         # Ensure dxil.dll is available in expected SDK version folder
         sdk_root = r"C:\Program Files (x86)\Windows Kits\10"
         if os.path.exists(sdk_root):
-            import glob
             dxil_candidates = glob.glob(f"{sdk_root}\\**\\dxil.dll", recursive=True)
             if dxil_candidates:
                 target_sdk_dir = f"{sdk_root}\\bin\\10.0.28000.0\\x64"
@@ -1557,38 +1557,42 @@ group("native_theme_browser") {
 
     align_source_timestamps(src_dir, out_dir)
 
-    # Invalidate stale object files in out_dir for restored stock files,
-    # and touch them so their timestamp is newer than any cached artifacts.
-    current_time = time.time()
-    stock_files_to_rebuild = [
-        'chrome/app/chrome_main_delegate.cc',
-        'chrome/browser/about_flags.cc',
-        'chrome/browser/chrome_content_browser_client.cc',
-        'chrome/browser/shell_integration_linux.cc',
-        'chrome/browser/ui/tabs/features.cc',
-        'chrome/browser/ui/tabs/tab_strip_prefs.cc',
-        'chrome/browser/ui/tabs/tab_strip_model.cc',
-        'chrome/browser/ui/ui_features.cc',
-    ]
     out_full = os.path.join(src_dir, out_dir)
-    for sf in stock_files_to_rebuild:
-        full_sf = os.path.join(src_dir, sf)
-        if os.path.exists(full_sf):
-            try:
-                os.utime(full_sf, (current_time, current_time))
-            except OSError:
-                pass
-        stem = os.path.splitext(os.path.basename(sf))[0]
-        if os.path.isdir(out_full):
-            for root, dirs, files in os.walk(out_full):
-                for f in files:
-                    if f.endswith('.o') and (f == f"{stem}.o" or f.endswith(f".{stem}.o")):
-                        p = os.path.join(root, f)
-                        try:
-                            os.remove(p)
-                            print(f"Removed stale object file to force rebuild: {p}")
-                        except OSError:
-                            pass
+    binary_built = os.path.exists(os.path.join(out_full, 'thorium')) or os.path.exists(os.path.join(out_full, 'chrome'))
+    if not binary_built:
+        # Invalidate stale object files in out_dir for restored stock files,
+        # and touch them so their timestamp is newer than any cached artifacts.
+        current_time = time.time()
+        stock_files_to_rebuild = [
+            'chrome/app/chrome_main_delegate.cc',
+            'chrome/browser/about_flags.cc',
+            'chrome/browser/chrome_content_browser_client.cc',
+            'chrome/browser/shell_integration_linux.cc',
+            'chrome/browser/ui/tabs/features.cc',
+            'chrome/browser/ui/tabs/tab_strip_prefs.cc',
+            'chrome/browser/ui/tabs/tab_strip_model.cc',
+            'chrome/browser/ui/ui_features.cc',
+        ]
+        for sf in stock_files_to_rebuild:
+            full_sf = os.path.join(src_dir, sf)
+            if os.path.exists(full_sf):
+                try:
+                    os.utime(full_sf, (current_time, current_time))
+                except OSError:
+                    pass
+            stem = os.path.splitext(os.path.basename(sf))[0]
+            if os.path.isdir(out_full):
+                for root, dirs, files in os.walk(out_full):
+                    for f in files:
+                        if f.endswith('.o') and (f == f"{stem}.o" or f.endswith(f".{stem}.o")):
+                            p = os.path.join(root, f)
+                            try:
+                                os.remove(p)
+                                print(f"Removed stale object file to force rebuild: {p}")
+                            except OSError:
+                                pass
+    else:
+        print(f"Thorium binary already built and linked in {out_dir}; skipping stale object removal to proceed directly to packaging.")
 
     print(f"Running gn gen using {gn_bin}...")
     run_cmd([gn_bin, 'gen', out_dir], cwd=src_dir, env=env)
@@ -1653,6 +1657,7 @@ group("native_theme_browser") {
                 elif item == 'thorium' and not os.path.exists(os.path.join(appdir, 'chrome')):
                     shutil.copy2(src_item, os.path.join(appdir, 'chrome'))
 
+        import glob
         for file in glob.glob(os.path.join(src_dir, out_dir, '*.bin')) + glob.glob(os.path.join(src_dir, out_dir, '*.pak')) + glob.glob(os.path.join(src_dir, out_dir, '*.so')):
             if os.path.exists(file):
                 shutil.copy2(file, os.path.join(appdir, os.path.basename(file)))
@@ -1699,8 +1704,9 @@ MimeType=text/html;text/xml;application/xhtml_xml;x-scheme-handler/http;x-scheme
             if os.path.exists(logo_512):
                 shutil.copy(logo_512, icon_path)
 
-        run_cmd([appimagetool_path, appdir], cwd=os.path.join(src_dir, out_dir), env=appimage_env)
-        print(f"Build complete. AppImage created in {os.path.join(src_dir, out_dir)}.")
+        target_appimage = os.path.join(src_dir, out_dir, f"Thorium-Ungoogled-Linux-{target_cpu}.AppImage")
+        run_cmd([appimagetool_path, appdir, target_appimage], cwd=os.path.join(src_dir, out_dir), env=appimage_env)
+        print(f"Build complete. AppImage created: {target_appimage}.")
     elif target_os == 'win':
         print(f"Build complete. Installer is at {os.path.join(src_dir, out_dir, 'mini_installer.exe')}")
 
