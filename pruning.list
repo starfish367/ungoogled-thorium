@@ -211,11 +211,7 @@ components/media_router/common/providers/cast/channel/fuzz_corpus/cast_message1
 components/media_router/common/providers/cast/channel/fuzz_corpus/cast_message2
 components/privacy_sandbox/privacy_sandbox_attestations/preload/privacy-sandbox-attestations.dat
 components/safe_browsing/content/resources/empty_file_type_policy.pb
-components/safe_browsing/core/common/safe_browsing_prefs.cc
-components/safe_browsing/core/common/safe_browsing_prefs.h
 components/services/storage/test_data/legacy_dom_storage_database.localstorage
-components/signin/public/base/signin_pref_names.cc
-components/signin/public/base/signin_pref_names.h
 components/system_media_controls/mac/mac_smc_diagram.jpeg
 components/zucchini/fuzzers/testdata/imposed_ensemble_matcher_fuzzer/seed.asciipb
 components/zucchini/fuzzers/testdata/new_eventlog_provider.dll

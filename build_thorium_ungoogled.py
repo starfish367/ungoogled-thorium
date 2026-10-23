@@ -235,19 +235,36 @@ def main():
         if os.path.exists(sysroot_script):
             run_cmd([sys.executable, sysroot_script, '--arch=arm64'], cwd=src_dir)
 
-    # Ensure rust windows msvc import libs are never pruned
+    # Ensure rust windows msvc import libs and C++ source/headers are never pruned
     pruning_list_path = os.path.join(root_dir, 'pruning.list')
     if os.path.exists(pruning_list_path):
         with open(pruning_list_path, 'r', encoding='utf-8') as f:
             pl_content = f.read()
-        if 'windows_x86_64_msvc' in pl_content:
-            lines = [l for l in pl_content.splitlines() if not ('windows_' in l and '_msvc' in l and '.lib' in l)]
-            with open(pruning_list_path, 'w', encoding='utf-8') as f:
-                f.write('\n'.join(lines) + '\n')
+        lines = [
+            l for l in pl_content.splitlines()
+            if not ('windows_' in l and '_msvc' in l and '.lib' in l)
+            and not (l.endswith('.h') or l.endswith('.cc') or l.endswith('.cpp'))
+        ]
+        with open(pruning_list_path, 'w', encoding='utf-8') as f:
+            f.write('\n'.join(lines) + '\n')
 
     # Apply ungoogled-chromium modifications
     print("Applying ungoogled-chromium modifications...")
     run_cmd([sys.executable, 'utils/prune_binaries.py', '--ignore-missing', '--keep-contingent-paths', src_dir, 'pruning.list'], cwd=root_dir)
+
+    # Restore essential header files if pruned
+    for h_file in [
+        'components/safe_browsing/core/common/safe_browsing_prefs.h',
+        'components/safe_browsing/core/common/safe_browsing_prefs.cc',
+        'components/signin/public/base/signin_pref_names.h',
+        'components/signin/public/base/signin_pref_names.cc',
+    ]:
+        if not os.path.exists(os.path.join(src_dir, h_file)):
+            try:
+                run_cmd(['git', 'checkout', '--', h_file], cwd=src_dir, check=False)
+            except Exception:
+                pass
+
     run_cmd([sys.executable, 'utils/patches.py', 'apply', src_dir, 'patches'], cwd=root_dir)
 
     # Apply domain substitution. Do NOT pass chromium_version.txt to -c (cache).
@@ -545,6 +562,19 @@ constexpr bool Contains(const Range& range, const Value& value) {
 
         print(f"Copying Thorium overlay from {thorium_src_overlay} to {src_dir}...")
         shutil.copytree(thorium_src_overlay, src_dir, dirs_exist_ok=True)
+
+        # Protect safe_browsing_prefs.h include in chrome_content_browser_client.cc
+        ccbc = os.path.join(src_dir, 'chrome', 'browser', 'chrome_content_browser_client.cc')
+        if os.path.exists(ccbc):
+            with open(ccbc, 'r', encoding='utf-8') as f:
+                ccbc_c = f.read()
+            if '#include "components/safe_browsing/core/common/safe_browsing_prefs.h"' in ccbc_c:
+                ccbc_c = ccbc_c.replace(
+                    '#include "components/safe_browsing/core/common/safe_browsing_prefs.h"',
+                    '#if __has_include("components/safe_browsing/core/common/safe_browsing_prefs.h")\n#include "components/safe_browsing/core/common/safe_browsing_prefs.h"\n#endif'
+                )
+                with open(ccbc, 'w', encoding='utf-8') as f:
+                    f.write(ccbc_c)
 
 
 
