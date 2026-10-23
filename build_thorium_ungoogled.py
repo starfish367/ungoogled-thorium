@@ -519,8 +519,40 @@ constexpr bool Contains(const Range& range, const Value& value) {
                         os.remove(os.path.join(thorium_comp_dir, f))
                     except OSError:
                         pass
+        # Remove outdated Thorium overlay files that overwrite modern Chromium files with obsolete/removed APIs
+        for obsolete_f in [
+            os.path.join(thorium_src_overlay, 'chrome', 'app', 'chrome_main_delegate.cc'),
+            os.path.join(thorium_src_overlay, 'chrome', 'browser', 'about_flags.cc'),
+        ]:
+            if os.path.exists(obsolete_f):
+                try:
+                    os.remove(obsolete_f)
+                except OSError:
+                    pass
+
+        # Ensure stock Chromium files are preserved/clean
+        for stock_f in ['chrome/app/chrome_main_delegate.cc', 'chrome/browser/about_flags.cc']:
+            if os.path.exists(os.path.join(src_dir, stock_f)):
+                try:
+                    run_cmd(['git', 'checkout', '--', stock_f], cwd=src_dir, check=False)
+                except Exception:
+                    pass
+
         print(f"Copying Thorium overlay from {thorium_src_overlay} to {src_dir}...")
         shutil.copytree(thorium_src_overlay, src_dir, dirs_exist_ok=True)
+
+        # Inject Thorium flag entries into stock about_flags.cc
+        stock_af_cc = os.path.join(src_dir, 'chrome', 'browser', 'about_flags.cc')
+        if os.path.exists(stock_af_cc):
+            with open(stock_af_cc, 'r', encoding='utf-8') as f:
+                af_c = f.read()
+            if 'thorium_flag_entries.h' not in af_c and 'const FeatureEntry kFeatureEntries[] = {' in af_c:
+                af_c = af_c.replace(
+                    'const FeatureEntry kFeatureEntries[] = {',
+                    '#include "chrome/browser/thorium_flag_choices.h"\nconst FeatureEntry kFeatureEntries[] = {\n#include "chrome/browser/thorium_flag_entries.h"'
+                )
+                with open(stock_af_cc, 'w', encoding='utf-8') as f:
+                    f.write(af_c)
 
     # Patch Thorium features.cc where IsTabSearchMoving() was removed in Chromium 154
     for base_p in [thorium_src_overlay, src_dir]:
@@ -569,39 +601,7 @@ constexpr bool Contains(const Range& range, const Value& value) {
                 with open(suw_cc, 'w', encoding='utf-8') as f:
                     f.write(c)
 
-        # Patch chrome_main_delegate.cc to remove unused base/functional/overloaded.h and handle disabled NaCl
-        cmd_cc = os.path.join(base_p, 'chrome', 'app', 'chrome_main_delegate.cc')
-        if os.path.exists(cmd_cc):
-            with open(cmd_cc, 'r', encoding='utf-8') as f:
-                c = f.read()
-            if '#include "base/functional/overloaded.h"' in c:
-                c = c.replace('#include "base/functional/overloaded.h"', '// #include "base/functional/overloaded.h"')
-            if '#include "components/nacl/common/buildflags.h"' in c:
-                c = c.replace(
-                    '#include "components/nacl/common/buildflags.h"',
-                    '#if __has_include("components/nacl/common/buildflags.h")\n#include "components/nacl/common/buildflags.h"\n#elif !defined(BUILDFLAG_INTERNAL_ENABLE_NACL)\n#define BUILDFLAG_INTERNAL_ENABLE_NACL() (0)\n#endif'
-                )
-            with open(cmd_cc, 'w', encoding='utf-8') as f:
-                f.write(c)
 
-        # Patch about_flags.cc to remove unused headers and handle disabled NaCl
-        af_cc = os.path.join(base_p, 'chrome', 'browser', 'about_flags.cc')
-        if os.path.exists(af_cc):
-            with open(af_cc, 'r', encoding='utf-8') as f:
-                c = f.read()
-            if '#include "chrome/browser/ip_protection/ip_protection_switches.h"' in c:
-                c = c.replace('#include "chrome/browser/ip_protection/ip_protection_switches.h"', '// #include "chrome/browser/ip_protection/ip_protection_switches.h"')
-            if '#include "chrome/browser/resource_coordinator/tab_manager_features.h"' in c:
-                c = c.replace('#include "chrome/browser/resource_coordinator/tab_manager_features.h"', '// #include "chrome/browser/resource_coordinator/tab_manager_features.h"')
-            if '#include "components/nacl/common/buildflags.h"' in c:
-                c = c.replace(
-                    '#include "components/nacl/common/buildflags.h"',
-                    '#if __has_include("components/nacl/common/buildflags.h")\n#include "components/nacl/common/buildflags.h"\n#include "components/nacl/common/nacl_switches.h"\n#elif !defined(BUILDFLAG_INTERNAL_ENABLE_NACL)\n#define BUILDFLAG_INTERNAL_ENABLE_NACL() (0)\n#endif'
-                )
-            if '#include "components/nacl/common/nacl_switches.h"' in c:
-                c = c.replace('#include "components/nacl/common/nacl_switches.h"', '// #include "components/nacl/common/nacl_switches.h"')
-            with open(af_cc, 'w', encoding='utf-8') as f:
-                f.write(c)
 
     # Ensure missing ungoogled-chromium prefs exist in signin_pref_names.h if present
     spn_h = os.path.join(src_dir, 'components', 'signin', 'public', 'base', 'signin_pref_names.h')
