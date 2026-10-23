@@ -543,6 +543,8 @@ constexpr bool Contains(const Range& range, const Value& value) {
             os.path.join(thorium_src_overlay, 'chrome', 'browser', 'chrome_content_browser_client.cc'),
             os.path.join(thorium_src_overlay, 'chrome', 'browser', 'shell_integration_linux.cc'),
             os.path.join(thorium_src_overlay, 'chrome', 'browser', 'ui', 'tabs', 'features.cc'),
+            os.path.join(thorium_src_overlay, 'chrome', 'browser', 'ui', 'tabs', 'tab_strip_prefs.cc'),
+            os.path.join(thorium_src_overlay, 'chrome', 'browser', 'ui', 'tabs', 'tab_strip_model.cc'),
             os.path.join(thorium_src_overlay, 'chrome', 'browser', 'ui', 'ui_features.cc'),
         ]:
             if os.path.exists(obsolete_f):
@@ -558,6 +560,8 @@ constexpr bool Contains(const Range& range, const Value& value) {
             'chrome/browser/chrome_content_browser_client.cc',
             'chrome/browser/shell_integration_linux.cc',
             'chrome/browser/ui/tabs/features.cc',
+            'chrome/browser/ui/tabs/tab_strip_prefs.cc',
+            'chrome/browser/ui/tabs/tab_strip_model.cc',
             'chrome/browser/ui/ui_features.cc',
         ]:
             if os.path.exists(os.path.join(src_dir, stock_f)):
@@ -1552,6 +1556,39 @@ group("native_theme_browser") {
         os.chmod(tp_gn, 0o755)
 
     align_source_timestamps(src_dir, out_dir)
+
+    # Invalidate stale object files in out_dir for restored stock files,
+    # and touch them so their timestamp is newer than any cached artifacts.
+    current_time = time.time()
+    stock_files_to_rebuild = [
+        'chrome/app/chrome_main_delegate.cc',
+        'chrome/browser/about_flags.cc',
+        'chrome/browser/chrome_content_browser_client.cc',
+        'chrome/browser/shell_integration_linux.cc',
+        'chrome/browser/ui/tabs/features.cc',
+        'chrome/browser/ui/tabs/tab_strip_prefs.cc',
+        'chrome/browser/ui/tabs/tab_strip_model.cc',
+        'chrome/browser/ui/ui_features.cc',
+    ]
+    out_full = os.path.join(src_dir, out_dir)
+    for sf in stock_files_to_rebuild:
+        full_sf = os.path.join(src_dir, sf)
+        if os.path.exists(full_sf):
+            try:
+                os.utime(full_sf, (current_time, current_time))
+            except OSError:
+                pass
+        stem = os.path.splitext(os.path.basename(sf))[0]
+        if os.path.isdir(out_full):
+            for root, dirs, files in os.walk(out_full):
+                for f in files:
+                    if f.endswith('.o') and (f == f"{stem}.o" or f.endswith(f".{stem}.o")):
+                        p = os.path.join(root, f)
+                        try:
+                            os.remove(p)
+                            print(f"Removed stale object file to force rebuild: {p}")
+                        except OSError:
+                            pass
 
     print(f"Running gn gen using {gn_bin}...")
     run_cmd([gn_bin, 'gen', out_dir], cwd=src_dir, env=env)
