@@ -775,8 +775,6 @@ declare_args() {
   is_cronet_build = false
   is_castos = false
   lacros_use_chromium_toolchain = false
-  android_full_debug = false
-  is_high_end_android = false
   allow_runtime_configurable_key_storage = false
   is_thorium_build = true
   is_raspi = false
@@ -800,8 +798,6 @@ llvm_force_head_revision = false
 is_cronet_build = false
 is_castos = false
 lacros_use_chromium_toolchain = false
-android_full_debug = false
-is_high_end_android = false
 allow_runtime_configurable_key_storage = false
 is_thorium_build = true
 is_raspi = false
@@ -1619,6 +1615,14 @@ group("native_theme_browser") {
     git_dir = os.path.join(src_dir, '.git')
     if os.path.exists(git_dir):
         shutil.rmtree(git_dir, ignore_errors=True)
+
+    # Ensure MEI preload protobuf dummy file exists for Linux deb packaging if pruned
+    if target_os == 'linux':
+        mei_pb = os.path.join(src_dir, 'chrome', 'browser', 'resources', 'media', 'mei_preload', 'preloaded_data.pb')
+        os.makedirs(os.path.dirname(mei_pb), exist_ok=True)
+        if not os.path.exists(mei_pb):
+            with open(mei_pb, 'wb') as f:
+                f.write(b'')
 
     print("Running ninja...")
     if target_os == 'win':
