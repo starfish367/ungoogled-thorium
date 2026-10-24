@@ -176,15 +176,21 @@ def main():
             shutil.move(backup_out_path, out_dir_path)
 
 
-    # Optimize .gclient to exclude heavy unused test suites like VK-GL-CTS
+    # Optimize .gclient to exclude heavy unused test suites like VK-GL-CTS and configure target_os for Android
     gclient_file = os.path.join(os.path.dirname(actual_src_dir), '.gclient')
     if os.path.exists(gclient_file):
         try:
             with open(gclient_file, 'r') as f:
                 content = f.read()
+            modified = False
             if 'VK-GL-CTS' not in content:
                 content = content.replace('"custom_deps": {}', '"custom_deps": {"src/third_party/angle/third_party/VK-GL-CTS/src": None}')
                 content = content.replace('"custom_vars": {}', '"custom_vars": {"checkout_configuration": "small"}')
+                modified = True
+            if target_os == 'android' and 'target_os = ["android"]' not in content:
+                content += '\ntarget_os = ["android"]\n'
+                modified = True
+            if modified:
                 with open(gclient_file, 'w') as f:
                     f.write(content)
         except Exception as e:
@@ -1515,9 +1521,13 @@ group("native_theme_browser") {
     elif target_os == 'win':
         gn_args.append('enable_nacl=false')
     elif target_os == 'android':
-        gn_args.append('target_os="android"')
         gn_args.append('enable_nacl=false')
         gn_args.append('is_high_end_android=true')
+        gn_args.append('disable_android_lint=true')
+        gn_args.append('use_v8_context_snapshot=false')
+        gn_args.append('system_webview_package_name="com.thorium.webview"')
+        gn_args.append('trichrome_library_package="org.thorium.trichromelibrary"')
+        gn_args.append('system_webview_shell_package_name="org.thorium.webview_shell"')
 
     if target_cpu in ['arm', 'arm64']:
         gn_args.append('arm_use_neon=true')
