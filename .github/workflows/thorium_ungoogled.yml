@@ -10,7 +10,9 @@ on:
         type: choice
         options:
           - linux-arm64
+          - linux-x64
           - windows-x64
+          - android-arm64
           - all
   push:
     paths:
@@ -103,6 +105,174 @@ jobs:
         with:
           name: Thorium-Ungoogled-Linux-arm64
           path: src/src/out/Thorium_arm64/*.AppImage
+
+  build-linux-x64:
+    if: ${{ (github.event_name == 'workflow_dispatch' && (inputs.target == 'all' || inputs.target == 'linux-x64')) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[build-linux-x64]')) }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Maximize Build Space
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 25600
+          temp-reserve-mb: 8192
+          swap-size-mb: 8192
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+          remove-docker-images: 'true'
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install sccache
+        uses: mozilla-actions/sccache-action@v0.0.4
+
+      - name: Restore Build Output Cache (Linux x64)
+        uses: actions/cache/restore@v4
+        with:
+          path: src/src/out/Thorium_x64
+          key: out-linux-x64-${{ github.sha }}-${{ github.run_id }}
+          restore-keys: |
+            out-linux-x64-
+
+      - name: Run Build Script
+        timeout-minutes: 340
+        run: |
+          mkdir -p ~/.cache "${GITHUB_WORKSPACE}/.cache" "${GITHUB_WORKSPACE}/.cache/sccache"
+          sccache --start-server || true
+          python build_thorium_ungoogled.py --target-os linux --target-cpu x64 --src-dir src
+        env:
+          SCCACHE_DIR: "${{ github.workspace }}/.cache/sccache"
+          SCCACHE_CACHE_SIZE: "10G"
+          SCCACHE_IGNORE_SERVER_IO_ERROR: "1"
+          SCCACHE_IDLE_TIMEOUT: "0"
+          XDG_CACHE_HOME: "${{ github.workspace }}/.cache"
+          VPYTHON_VIRTUALENV_ROOT: "${{ github.workspace }}/.cache/vpython"
+          CIPD_CACHE_DIR: "${{ github.workspace }}/.cache/cipd"
+
+      - name: Cleanup temporary files before caching
+        if: always()
+        run: |
+          sudo killall -9 ninja clang clang++ python3 2>/dev/null || true
+          sleep 3
+          df -h
+          mkdir -p src/src/out/Thorium_x64 "${GITHUB_WORKSPACE}/.cache/sccache"
+          rm -rf ~/.cache/vpython ~/.cache/cipd ~/.cache/pip || true
+          rm -rf src/src/v8/tools/builtins-pgo || true
+          sudo rm -rf /opt/hostedtoolcache /usr/local/share/boost /usr/local/lib/android /tmp/* || true
+          sudo apt-get clean || true
+          df -h
+
+      - name: Save Build Output Cache (Linux x64)
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: src/src/out/Thorium_x64
+          key: out-linux-x64-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Save sccache (Linux x64)
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: ${{ github.workspace }}/.cache/sccache
+          key: sccache-linux-x64-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Thorium-Ungoogled-Ubuntu-deb-amd64
+          path: |
+            src/src/out/Thorium_x64/*.AppImage
+            src/src/out/Thorium_x64/*.deb
+
+  build-android-arm64:
+    if: ${{ (github.event_name == 'workflow_dispatch' && (inputs.target == 'all' || inputs.target == 'android-arm64')) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[build-android]')) }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Maximize Build Space
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 25600
+          temp-reserve-mb: 8192
+          swap-size-mb: 8192
+          remove-dotnet: 'true'
+          remove-android: 'false'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+          remove-docker-images: 'true'
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install sccache
+        uses: mozilla-actions/sccache-action@v0.0.4
+
+      - name: Restore Build Output Cache (Android arm64)
+        uses: actions/cache/restore@v4
+        with:
+          path: src/src/out/Thorium_android_arm64
+          key: out-android-arm64-${{ github.sha }}-${{ github.run_id }}
+          restore-keys: |
+            out-android-arm64-
+
+      - name: Run Build Script
+        timeout-minutes: 340
+        run: |
+          mkdir -p ~/.cache "${GITHUB_WORKSPACE}/.cache" "${GITHUB_WORKSPACE}/.cache/sccache"
+          sccache --start-server || true
+          python build_thorium_ungoogled.py --target-os android --target-cpu arm64 --src-dir src
+        env:
+          SCCACHE_DIR: "${{ github.workspace }}/.cache/sccache"
+          SCCACHE_CACHE_SIZE: "10G"
+          SCCACHE_IGNORE_SERVER_IO_ERROR: "1"
+          SCCACHE_IDLE_TIMEOUT: "0"
+          XDG_CACHE_HOME: "${{ github.workspace }}/.cache"
+          VPYTHON_VIRTUALENV_ROOT: "${{ github.workspace }}/.cache/vpython"
+          CIPD_CACHE_DIR: "${{ github.workspace }}/.cache/cipd"
+
+      - name: Cleanup temporary files before caching
+        if: always()
+        run: |
+          sudo killall -9 ninja clang clang++ python3 2>/dev/null || true
+          sleep 3
+          df -h
+          mkdir -p src/src/out/Thorium_android_arm64 "${GITHUB_WORKSPACE}/.cache/sccache"
+          rm -rf ~/.cache/vpython ~/.cache/cipd ~/.cache/pip || true
+          rm -rf src/src/v8/tools/builtins-pgo || true
+          sudo rm -rf /opt/hostedtoolcache /usr/local/share/boost /tmp/* || true
+          sudo apt-get clean || true
+          df -h
+
+      - name: Save Build Output Cache (Android arm64)
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: src/src/out/Thorium_android_arm64
+          key: out-android-arm64-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Save sccache (Android arm64)
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: ${{ github.workspace }}/.cache/sccache
+          key: sccache-android-arm64-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Thorium-Ungoogled-Android-arm64-APK
+          path: src/src/out/Thorium_android_arm64/apks/*.apk
 
   build-windows:
     if: ${{ (github.event_name != 'workflow_dispatch' || inputs.target == 'all' || inputs.target == 'windows-x64') && !contains(github.event.head_commit.message, '[skip-windows]') }}

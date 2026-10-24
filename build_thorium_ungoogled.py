@@ -46,7 +46,7 @@ def get_chromium_version(root_dir):
 def main():
     import glob
     parser = argparse.ArgumentParser(description="Build Thorium + ungoogled-chromium")
-    parser.add_argument('--target-os', default='linux', choices=['linux', 'win'])
+    parser.add_argument('--target-os', default='linux', choices=['linux', 'win', 'android'])
     parser.add_argument('--target-cpu', default='arm64', choices=['arm64', 'x64'])
     parser.add_argument('--src-dir', default='src', help='Chromium source directory')
     args = parser.parse_args()
@@ -1514,11 +1514,18 @@ group("native_theme_browser") {
         gn_args.append('use_qt=false')
     elif target_os == 'win':
         gn_args.append('enable_nacl=false')
+    elif target_os == 'android':
+        gn_args.append('target_os="android"')
+        gn_args.append('enable_nacl=false')
+        gn_args.append('is_high_end_android=true')
 
     if target_cpu in ['arm', 'arm64']:
         gn_args.append('arm_use_neon=true')
 
-    out_dir = f"out/Thorium_{target_cpu}"
+    if target_os == 'android':
+        out_dir = f"out/Thorium_android_{target_cpu}"
+    else:
+        out_dir = f"out/Thorium_{target_cpu}"
     out_path = os.path.join(src_dir, out_dir)
     os.makedirs(out_path, exist_ok=True)
     with open(os.path.join(out_path, 'args.gn'), 'w') as f:
@@ -1604,21 +1611,24 @@ group("native_theme_browser") {
         shutil.rmtree(git_dir, ignore_errors=True)
 
     print("Running ninja...")
-    target = 'chrome'
     if target_os == 'win':
-        target = 'mini_installer'
+        targets = ['mini_installer']
+    elif target_os == 'android':
+        targets = ['chrome_public_apk']
+    else:
+        # Build both chrome binary and deb package for Linux
+        targets = ['chrome', 'chrome/installer/linux:stable_deb']
 
     ninja_cmd = 'ninja.exe' if sys.platform == 'win32' else 'ninja'
     jobs = str(os.cpu_count() or 2)
-    run_cmd([ninja_cmd, '-j', jobs, '-C', out_dir, target], cwd=src_dir, env=env)
+    run_cmd([ninja_cmd, '-j', jobs, '-C', out_dir] + targets, cwd=src_dir, env=env)
 
     print("Packaging...")
     if target_os == 'linux':
         print("Packaging AppImage...")
         appimage_dir = os.path.join(thorium_dir, 'infra', 'APPIMAGE')
 
-        # We are running on x86_64 host but building for arm64.
-        # So we MUST use the x86_64 AppImageTool, but pass ARCH=arm64 environment var.
+        # We are running on x86_64 host; pass ARCH corresponding to target_cpu.
         appimagetool_path = os.path.join(root_dir, 'appimagetool-x86_64.AppImage')
         if not os.path.exists(appimagetool_path):
             run_cmd(['wget', '-O', appimagetool_path, 'https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage'])
@@ -1626,7 +1636,7 @@ group("native_theme_browser") {
 
         appimage_env = env.copy()
         appimage_env['PATH'] = f"{root_dir}:{appimage_env['PATH']}"
-        appimage_env['ARCH'] = 'arm64'
+        appimage_env['ARCH'] = 'arm64' if target_cpu == 'arm64' else 'x86_64'
         appimage_env['APPIMAGE_EXTRACT_AND_RUN'] = '1'
 
         appdir = os.path.join(src_dir, out_dir, 'Thorium.AppDir')
@@ -1707,8 +1717,15 @@ MimeType=text/html;text/xml;application/xhtml_xml;x-scheme-handler/http;x-scheme
         target_appimage = os.path.join(src_dir, out_dir, f"Thorium-Ungoogled-Linux-{target_cpu}.AppImage")
         run_cmd([appimagetool_path, appdir, target_appimage], cwd=os.path.join(src_dir, out_dir), env=appimage_env)
         print(f"Build complete. AppImage created: {target_appimage}.")
+
+        deb_files = glob.glob(os.path.join(src_dir, out_dir, '*.deb'))
+        if deb_files:
+            print(f"Build complete. Debian package(s): {deb_files}")
     elif target_os == 'win':
         print(f"Build complete. Installer is at {os.path.join(src_dir, out_dir, 'mini_installer.exe')}")
+    elif target_os == 'android':
+        apk_files = glob.glob(os.path.join(src_dir, out_dir, 'apks', '*.apk'))
+        print(f"Build complete. Android APK(s): {apk_files}")
 
 if __name__ == '__main__':
     main()
